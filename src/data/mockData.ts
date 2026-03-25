@@ -19,12 +19,12 @@ export const mockTeachers: Teacher[] = [
 ];
 
 export const mockClassrooms: Classroom[] = [
-  { id: 'c1', name: 'Room 101', capacity: 30 },
-  { id: 'c2', name: 'Room 102', capacity: 30 },
-  { id: 'c3', name: 'Lab A', capacity: 25 },
-  { id: 'c4', name: 'Lab B', capacity: 25 },
-  { id: 'c5', name: 'Art Studio', capacity: 20 },
-  { id: 'c6', name: 'Gym', capacity: 50 },
+  { id: 'c1', name: 'Room 101', subject_ids: ['all'] },
+  { id: 'c2', name: 'Room 102', subject_ids: ['all'] },
+  { id: 'c3', name: 'Lab A', subject_ids: ['s2'] },
+  { id: 'c4', name: 'Lab B', subject_ids: ['s2'] },
+  { id: 'c5', name: 'Art Studio', subject_ids: ['s5'] },
+  { id: 'c6', name: 'Gym', subject_ids: ['s6'] },
 ];
 
 export const mockStudentGroups: StudentGroup[] = [
