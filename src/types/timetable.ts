@@ -10,12 +10,14 @@ export interface Teacher {
   id: string;
   name: string;
   subject_id: string;
+  hours_per_week: number;
+  section: string;
 }
 
 export interface Classroom {
   id: string;
   name: string;
-  capacity: number;
+  subject_ids: string[]; // ['all'] for regular, or specific subject IDs for specialized
 }
 
 export interface Subject {
@@ -29,6 +31,7 @@ export interface StudentGroup {
   id: string;
   grade: string;
   section: string;
+  subjects: { subject_id: string; hours_per_week: number }[];
 }
 
 export interface LessonSlot {

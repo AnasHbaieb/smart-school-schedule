@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockTeachers, mockClassrooms, mockSubjects, mockStudentGroups, mockTimetableEntries } from '@/data/mockData';
-import { Users, BookOpen, DoorOpen, GraduationCap, Calendar, AlertTriangle } from 'lucide-react';
+import { mockTeachers, mockClassrooms, mockStudentGroups, mockTimetableEntries } from '@/data/mockData';
+import { Users, DoorOpen, GraduationCap, Calendar, AlertTriangle } from 'lucide-react';
 
 const stats = [
   { label: 'Teachers', value: mockTeachers.length, icon: Users, color: 'text-primary' },
-  { label: 'Subjects', value: mockSubjects.length, icon: BookOpen, color: 'text-accent' },
   { label: 'Classrooms', value: mockClassrooms.length, icon: DoorOpen, color: 'text-[hsl(25,95%,53%)]' },
   { label: 'Student Groups', value: mockStudentGroups.length, icon: GraduationCap, color: 'text-[hsl(340,65%,55%)]' },
 ];
@@ -12,14 +11,12 @@ const stats = [
 export default function Dashboard() {
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Welcome to SmartTimetable — manage your school schedule.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map(s => (
           <Card key={s.label} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -33,7 +30,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Quick info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>

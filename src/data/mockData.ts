@@ -10,28 +10,41 @@ export const mockSubjects: Subject[] = [
 ];
 
 export const mockTeachers: Teacher[] = [
-  { id: 't1', name: 'Dr. Ahmed', subject_id: 's1' },
-  { id: 't2', name: 'Ms. Sarah', subject_id: 's2' },
-  { id: 't3', name: 'Mr. James', subject_id: 's3' },
-  { id: 't4', name: 'Mrs. Fatima', subject_id: 's4' },
-  { id: 't5', name: 'Mr. Omar', subject_id: 's5' },
-  { id: 't6', name: 'Coach Khalid', subject_id: 's6' },
+  { id: 't1', name: 'Dr. Ahmed', subject_id: 's1', hours_per_week: 18, section: 'A' },
+  { id: 't2', name: 'Ms. Sarah', subject_id: 's2', hours_per_week: 16, section: 'A' },
+  { id: 't3', name: 'Mr. James', subject_id: 's3', hours_per_week: 20, section: 'B' },
+  { id: 't4', name: 'Mrs. Fatima', subject_id: 's4', hours_per_week: 12, section: 'A' },
+  { id: 't5', name: 'Mr. Omar', subject_id: 's5', hours_per_week: 8, section: 'B' },
+  { id: 't6', name: 'Coach Khalid', subject_id: 's6', hours_per_week: 10, section: 'A' },
 ];
 
 export const mockClassrooms: Classroom[] = [
-  { id: 'c1', name: 'Room 101', capacity: 30 },
-  { id: 'c2', name: 'Room 102', capacity: 30 },
-  { id: 'c3', name: 'Lab A', capacity: 25 },
-  { id: 'c4', name: 'Lab B', capacity: 25 },
-  { id: 'c5', name: 'Art Studio', capacity: 20 },
-  { id: 'c6', name: 'Gym', capacity: 50 },
+  { id: 'c1', name: 'Room 101', subject_ids: ['all'] },
+  { id: 'c2', name: 'Room 102', subject_ids: ['all'] },
+  { id: 'c3', name: 'Lab A', subject_ids: ['s2'] },
+  { id: 'c4', name: 'Lab B', subject_ids: ['s2'] },
+  { id: 'c5', name: 'Art Studio', subject_ids: ['s5'] },
+  { id: 'c6', name: 'Gym', subject_ids: ['s6'] },
 ];
 
 export const mockStudentGroups: StudentGroup[] = [
-  { id: 'g1', grade: '10', section: 'A' },
-  { id: 'g2', grade: '10', section: 'B' },
-  { id: 'g3', grade: '11', section: 'A' },
-  { id: 'g4', grade: '11', section: 'B' },
+  { id: 'g1', grade: '10', section: 'A', subjects: [
+    { subject_id: 's1', hours_per_week: 5 }, { subject_id: 's2', hours_per_week: 4 },
+    { subject_id: 's3', hours_per_week: 5 }, { subject_id: 's4', hours_per_week: 3 },
+    { subject_id: 's5', hours_per_week: 2 }, { subject_id: 's6', hours_per_week: 2 },
+  ]},
+  { id: 'g2', grade: '10', section: 'B', subjects: [
+    { subject_id: 's1', hours_per_week: 5 }, { subject_id: 's3', hours_per_week: 5 },
+    { subject_id: 's2', hours_per_week: 4 }, { subject_id: 's6', hours_per_week: 2 },
+  ]},
+  { id: 'g3', grade: '11', section: 'A', subjects: [
+    { subject_id: 's1', hours_per_week: 4 }, { subject_id: 's2', hours_per_week: 4 },
+    { subject_id: 's3', hours_per_week: 4 }, { subject_id: 's4', hours_per_week: 3 },
+  ]},
+  { id: 'g4', grade: '11', section: 'B', subjects: [
+    { subject_id: 's1', hours_per_week: 4 }, { subject_id: 's3', hours_per_week: 4 },
+    { subject_id: 's5', hours_per_week: 3 }, { subject_id: 's6', hours_per_week: 3 },
+  ]},
 ];
 
 const timeSlots = [

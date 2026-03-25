@@ -2,7 +2,7 @@ import { mockTeachers, getSubjectById } from '@/data/mockData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, Trash2 } from 'lucide-react';
 
 export default function TeachersPage() {
   return (
@@ -30,6 +30,8 @@ export default function TeachersPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Subject</TableHead>
+                <TableHead>Hours/Week</TableHead>
+                <TableHead>Section</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -47,8 +49,13 @@ export default function TeachersPage() {
                         {subject?.title}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>{t.hours_per_week}h</TableCell>
+                    <TableCell>{t.section}</TableCell>
+                    <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
