@@ -28,10 +28,23 @@ export const mockClassrooms: Classroom[] = [
 ];
 
 export const mockStudentGroups: StudentGroup[] = [
-  { id: 'g1', grade: '10', section: 'A' },
-  { id: 'g2', grade: '10', section: 'B' },
-  { id: 'g3', grade: '11', section: 'A' },
-  { id: 'g4', grade: '11', section: 'B' },
+  { id: 'g1', grade: '10', section: 'A', subjects: [
+    { subject_id: 's1', hours_per_week: 5 }, { subject_id: 's2', hours_per_week: 4 },
+    { subject_id: 's3', hours_per_week: 5 }, { subject_id: 's4', hours_per_week: 3 },
+    { subject_id: 's5', hours_per_week: 2 }, { subject_id: 's6', hours_per_week: 2 },
+  ]},
+  { id: 'g2', grade: '10', section: 'B', subjects: [
+    { subject_id: 's1', hours_per_week: 5 }, { subject_id: 's3', hours_per_week: 5 },
+    { subject_id: 's2', hours_per_week: 4 }, { subject_id: 's6', hours_per_week: 2 },
+  ]},
+  { id: 'g3', grade: '11', section: 'A', subjects: [
+    { subject_id: 's1', hours_per_week: 4 }, { subject_id: 's2', hours_per_week: 4 },
+    { subject_id: 's3', hours_per_week: 4 }, { subject_id: 's4', hours_per_week: 3 },
+  ]},
+  { id: 'g4', grade: '11', section: 'B', subjects: [
+    { subject_id: 's1', hours_per_week: 4 }, { subject_id: 's3', hours_per_week: 4 },
+    { subject_id: 's5', hours_per_week: 3 }, { subject_id: 's6', hours_per_week: 3 },
+  ]},
 ];
 
 const timeSlots = [
