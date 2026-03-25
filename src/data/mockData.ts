@@ -10,12 +10,12 @@ export const mockSubjects: Subject[] = [
 ];
 
 export const mockTeachers: Teacher[] = [
-  { id: 't1', name: 'Dr. Ahmed', subject_id: 's1' },
-  { id: 't2', name: 'Ms. Sarah', subject_id: 's2' },
-  { id: 't3', name: 'Mr. James', subject_id: 's3' },
-  { id: 't4', name: 'Mrs. Fatima', subject_id: 's4' },
-  { id: 't5', name: 'Mr. Omar', subject_id: 's5' },
-  { id: 't6', name: 'Coach Khalid', subject_id: 's6' },
+  { id: 't1', name: 'Dr. Ahmed', subject_id: 's1', hours_per_week: 18, section: 'A' },
+  { id: 't2', name: 'Ms. Sarah', subject_id: 's2', hours_per_week: 16, section: 'A' },
+  { id: 't3', name: 'Mr. James', subject_id: 's3', hours_per_week: 20, section: 'B' },
+  { id: 't4', name: 'Mrs. Fatima', subject_id: 's4', hours_per_week: 12, section: 'A' },
+  { id: 't5', name: 'Mr. Omar', subject_id: 's5', hours_per_week: 8, section: 'B' },
+  { id: 't6', name: 'Coach Khalid', subject_id: 's6', hours_per_week: 10, section: 'A' },
 ];
 
 export const mockClassrooms: Classroom[] = [
