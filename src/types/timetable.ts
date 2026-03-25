@@ -10,6 +10,8 @@ export interface Teacher {
   id: string;
   name: string;
   subject_id: string;
+  hours_per_week: number;
+  section: string;
 }
 
 export interface Classroom {
