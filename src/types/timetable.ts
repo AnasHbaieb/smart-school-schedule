@@ -31,6 +31,7 @@ export interface StudentGroup {
   id: string;
   grade: string;
   section: string;
+  subjects: { subject_id: string; hours_per_week: number }[];
 }
 
 export interface LessonSlot {
