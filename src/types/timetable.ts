@@ -17,7 +17,7 @@ export interface Teacher {
 export interface Classroom {
   id: string;
   name: string;
-  capacity: number;
+  subject_ids: string[]; // ['all'] for regular, or specific subject IDs for specialized
 }
 
 export interface Subject {
