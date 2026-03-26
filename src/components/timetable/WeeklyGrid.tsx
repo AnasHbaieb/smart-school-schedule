@@ -31,7 +31,7 @@ export function WeeklyGrid({
       if (!seen.has(key)) seen.set(key, { start: ls.start_time, end: ls.end_time });
     }
     return Array.from(seen.values()).sort((a, b) => a.start.localeCompare(b.start));
-  }, [lessonSlots]);
+  }, [safeSlots]);
 
   const entryMap = useMemo(() => {
     const map = new Map<string, TimetableEntry[]>();
