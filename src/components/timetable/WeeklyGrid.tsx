@@ -21,9 +21,12 @@ export function WeeklyGrid({
   getTeacherById,
   getClassroomById,
 }: WeeklyGridProps) {
+  const safeSlots = lessonSlots || [];
+  const safeEntries = entries || [];
+
   const timeSlots = useMemo(() => {
     const seen = new Map<string, { start: string; end: string }>();
-    for (const ls of lessonSlots) {
+    for (const ls of safeSlots) {
       const key = `${ls.start_time}-${ls.end_time}`;
       if (!seen.has(key)) seen.set(key, { start: ls.start_time, end: ls.end_time });
     }
