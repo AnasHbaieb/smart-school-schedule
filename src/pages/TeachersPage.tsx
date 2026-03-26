@@ -11,28 +11,69 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
 export default function TeachersPage() {
-  const { teachers, subjects, addTeacher, updateTeacher, deleteTeacher, getSubjectById } = useData();
+  const { teachers, subjects, studentGroups, addTeacher, updateTeacher, deleteTeacher, getSubjectById } = useData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [hours, setHours] = useState('');
-  const [sectionInput, setSectionInput] = useState('');
   const [sections, setSections] = useState<string[]>([]);
+  const [gradePick, setGradePick] = useState('');
+  const [sectionPick, setSectionPick] = useState('');
+  const [sectionInput, setSectionInput] = useState(''); // fallback when no student groups
+
+  const normalizeSectionPair = (raw: string): { grade?: string; section?: string; raw: string } => {
+    const s = raw.trim();
+    if (!s) return { raw: '' };
+    if (s.includes(':')) {
+      const [g, sec] = s.split(':');
+      return { grade: g?.trim() || undefined, section: sec?.trim() || undefined, raw: s };
+    }
+    const m = s.match(/(\d+)\s*[- ]?\s*([A-Za-z].*)$/);
+    if (m) return { grade: m[1], section: m[2].trim(), raw: s };
+    return { raw: s };
+  };
+
+  const gradeOptions = Array.from(new Set(studentGroups.map(g => g.grade))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const sectionOptions = Array.from(new Set(studentGroups.filter(g => !gradePick || g.grade === gradePick).map(g => g.section)))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   const openAdd = () => {
-    setEditId(null); setName(''); setSubjectId(subjects[0]?.id || ''); setHours(''); setSections([]); setSectionInput('');
+    setEditId(null);
+    setName('');
+    setSubjectId(subjects[0]?.id || '');
+    setHours('');
+    setSections([]);
+    setGradePick('');
+    setSectionPick('');
+    setSectionInput('');
     setDialogOpen(true);
   };
 
   const openEdit = (id: string) => {
     const t = teachers.find(x => x.id === id);
     if (!t) return;
-    setEditId(id); setName(t.name); setSubjectId(t.subject_id); setHours(String(t.hours_per_week)); setSections([...t.sections]); setSectionInput('');
+    setEditId(id);
+    setName(t.name);
+    setSubjectId(t.subject_id);
+    setHours(String(t.hours_per_week));
+    setSections([...t.sections]);
+    setGradePick('');
+    setSectionPick('');
+    setSectionInput('');
     setDialogOpen(true);
   };
 
   const addSection = () => {
+    if (studentGroups.length > 0) {
+      if (!gradePick || !sectionPick) { toast.error('Pick grade and section'); return; }
+      const val = `${gradePick}:${sectionPick}`;
+      if (sections.includes(val)) { toast.error('Already added'); return; }
+      setSections(prev => [...prev, val]);
+      setSectionPick('');
+      return;
+    }
+
     const val = sectionInput.trim();
     if (!val) return;
     if (sections.includes(val)) { toast.error('Already added'); return; }
@@ -76,13 +117,15 @@ export default function TeachersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Hours/Week</TableHead>
-                <TableHead>Grade / Section</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead>Section</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {teachers.map(t => {
                 const subject = getSubjectById(t.subject_id);
+                const pairs = t.sections.map(normalizeSectionPair).filter(p => p.raw);
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{t.name}</TableCell>
@@ -94,8 +137,19 @@ export default function TeachersPage() {
                     <TableCell>{t.hours_per_week}h</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {t.sections.map(s => (
-                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                        {pairs.map((p, idx) => (
+                          <Badge key={`${t.id}_g_${p.raw}_${idx}`} variant="secondary" className="text-xs">
+                            {p.grade ? `Grade ${p.grade}` : '—'}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {pairs.map((p, idx) => (
+                          <Badge key={`${t.id}_s_${p.raw}_${idx}`} variant="secondary" className="text-xs">
+                            {p.section || p.raw}
+                          </Badge>
                         ))}
                       </div>
                     </TableCell>
@@ -109,7 +163,7 @@ export default function TeachersPage() {
                 );
               })}
               {teachers.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No teachers yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No teachers yet.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -130,15 +184,37 @@ export default function TeachersPage() {
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Hours/Week</label><Input type="number" value={hours} onChange={e => setHours(e.target.value)} /></div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Grade / Section (e.g. 10A, 11B)</label>
-              <div className="flex gap-2">
-                <Input value={sectionInput} onChange={e => setSectionInput(e.target.value)} placeholder="e.g. 10A" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSection())} />
-                <Button type="button" variant="outline" onClick={addSection}>Add</Button>
-              </div>
+              <label className="text-sm font-medium">Grade (column) & Section (column)</label>
+              {studentGroups.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <Select value={gradePick} onValueChange={(v) => { setGradePick(v); setSectionPick(''); }}>
+                    <SelectTrigger><SelectValue placeholder="Grade" /></SelectTrigger>
+                    <SelectContent>
+                      {gradeOptions.map(g => <SelectItem key={g} value={g}>Grade {g}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={sectionPick} onValueChange={setSectionPick}>
+                    <SelectTrigger><SelectValue placeholder="Section" /></SelectTrigger>
+                    <SelectContent>
+                      {sectionOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={addSection}>Add</Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input value={sectionInput} onChange={e => setSectionInput(e.target.value)} placeholder="e.g. 10A" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSection())} />
+                  <Button type="button" variant="outline" onClick={addSection}>Add</Button>
+                </div>
+              )}
               <div className="flex flex-wrap gap-1 mt-2">
                 {sections.map(s => (
                   <Badge key={s} variant="secondary" className="gap-1">
-                    {s}
+                    {(() => {
+                      const p = normalizeSectionPair(s);
+                      if (p.grade && p.section) return `Grade ${p.grade} - ${p.section}`;
+                      return s;
+                    })()}
                     <button onClick={() => removeSection(s)}><X className="w-3 h-3" /></button>
                   </Badge>
                 ))}

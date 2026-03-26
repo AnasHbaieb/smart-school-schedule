@@ -53,7 +53,9 @@ export default function TimetablePage() {
           <SelectContent>
             <SelectItem value="all">All Groups</SelectItem>
             {studentGroups.map(g => (
-              <SelectItem key={g.id} value={g.id}>Grade {g.grade} - {g.section}</SelectItem>
+              <SelectItem key={g.id} value={g.id}>
+                Grade {g.grade} - {g.section}{g.class_name ? ` - ${g.class_name}` : ''}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
