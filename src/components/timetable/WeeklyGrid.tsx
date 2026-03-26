@@ -21,23 +21,26 @@ export function WeeklyGrid({
   getTeacherById,
   getClassroomById,
 }: WeeklyGridProps) {
+  const safeSlots = lessonSlots || [];
+  const safeEntries = entries || [];
+
   const timeSlots = useMemo(() => {
     const seen = new Map<string, { start: string; end: string }>();
-    for (const ls of lessonSlots) {
+    for (const ls of safeSlots) {
       const key = `${ls.start_time}-${ls.end_time}`;
       if (!seen.has(key)) seen.set(key, { start: ls.start_time, end: ls.end_time });
     }
     return Array.from(seen.values()).sort((a, b) => a.start.localeCompare(b.start));
-  }, [lessonSlots]);
+  }, [safeSlots]);
 
   const entryMap = useMemo(() => {
     const map = new Map<string, TimetableEntry[]>();
-    let filtered = entries;
+    let filtered = safeEntries;
     if (filterGroupId) filtered = filtered.filter(e => e.student_group_id === filterGroupId);
     if (filterTeacherId) filtered = filtered.filter(e => e.teacher_id === filterTeacherId);
 
     for (const entry of filtered) {
-      const slot = lessonSlots.find(ls => ls.id === entry.lesson_slot_id);
+      const slot = safeSlots.find(ls => ls.id === entry.lesson_slot_id);
       if (slot) {
         const key = `${slot.day_of_week}-${slot.start_time}-${slot.end_time}`;
         const list = map.get(key) || [];
@@ -46,7 +49,7 @@ export function WeeklyGrid({
       }
     }
     return map;
-  }, [entries, lessonSlots, filterGroupId, filterTeacherId]);
+  }, [safeEntries, safeSlots, filterGroupId, filterTeacherId]);
 
   return (
     <div className="overflow-x-auto">
