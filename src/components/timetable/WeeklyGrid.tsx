@@ -35,12 +35,12 @@ export function WeeklyGrid({
 
   const entryMap = useMemo(() => {
     const map = new Map<string, TimetableEntry[]>();
-    let filtered = entries;
+    let filtered = safeEntries;
     if (filterGroupId) filtered = filtered.filter(e => e.student_group_id === filterGroupId);
     if (filterTeacherId) filtered = filtered.filter(e => e.teacher_id === filterTeacherId);
 
     for (const entry of filtered) {
-      const slot = lessonSlots.find(ls => ls.id === entry.lesson_slot_id);
+      const slot = safeSlots.find(ls => ls.id === entry.lesson_slot_id);
       if (slot) {
         const key = `${slot.day_of_week}-${slot.start_time}-${slot.end_time}`;
         const list = map.get(key) || [];
