@@ -44,7 +44,7 @@ export function useAppData() {
       if (teachRes.data) setTeachers(teachRes.data.map((t: any) => ({ id: t.id, name: t.name, subject_id: t.subject_id, hours_per_week: t.hours_per_week, sections: t.sections || [] })));
       if (classRes.data) setClassrooms(classRes.data.map((c: any) => ({ id: c.id, name: c.name, is_general: c.is_general, subject_ids: c.subject_ids || [] })));
       if (groupRes.data) setStudentGroups(groupRes.data.map((g: any) => ({ id: g.id, grade: g.grade, section: g.section, class_name: g.class_name || '', subjects: g.subjects || [] })));
-      if (slotRes.data) setTimeSlotDefs(slotRes.data.map((s: any) => ({ id: s.id, start_time: s.start_time, end_time: s.end_time, days: s.days || DAYS })));
+      if (slotRes.data) setTimeSlotDefs(slotRes.data.map((s: any) => ({ id: s.id, start_time: s.start_time, end_time: s.end_time, days: (s.days || DAYS) as DayOfWeek[] })));
       if (entryRes.data) setTimetableEntries(entryRes.data.map((e: any) => ({ id: e.id, time_slot_id: e.time_slot_id, day_of_week: e.day_of_week, teacher_id: e.teacher_id, classroom_id: e.classroom_id, subject_id: e.subject_id, student_group_id: e.student_group_id })));
       setLoading(false);
     }
