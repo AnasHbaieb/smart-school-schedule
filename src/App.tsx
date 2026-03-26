@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { AppDataProvider } from "@/contexts/AppDataContext";
 import Dashboard from "@/pages/Dashboard";
 import TimetablePage from "@/pages/TimetablePage";
 import TeachersPage from "@/pages/TeachersPage";
@@ -20,20 +21,22 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/timetable" element={<TimetablePage />} />
-            <Route path="/teachers" element={<TeachersPage />} />
-            <Route path="/subjects" element={<SubjectsPage />} />
-            <Route path="/classrooms" element={<ClassroomsPage />} />
-            <Route path="/groups" element={<GroupsPage />} />
-            <Route path="/slots" element={<SlotsPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AppDataProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/timetable" element={<TimetablePage />} />
+              <Route path="/teachers" element={<TeachersPage />} />
+              <Route path="/subjects" element={<SubjectsPage />} />
+              <Route path="/classrooms" element={<ClassroomsPage />} />
+              <Route path="/groups" element={<GroupsPage />} />
+              <Route path="/slots" element={<SlotsPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AppDataProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
