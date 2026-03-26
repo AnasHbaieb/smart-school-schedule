@@ -33,6 +33,13 @@ export function WeeklyGrid({
     return Array.from(seen.values()).sort((a, b) => a.start.localeCompare(b.start));
   }, [safeSlots]);
 
+  // Which days actually have slots
+  const activeDays = useMemo(() => {
+    const daySet = new Set<DayOfWeek>();
+    for (const ls of safeSlots) daySet.add(ls.day_of_week);
+    return DAYS.filter(d => daySet.has(d));
+  }, [safeSlots]);
+
   const entryMap = useMemo(() => {
     const map = new Map<string, TimetableEntry[]>();
     let filtered = safeEntries;
@@ -40,23 +47,29 @@ export function WeeklyGrid({
     if (filterTeacherId) filtered = filtered.filter(e => e.teacher_id === filterTeacherId);
 
     for (const entry of filtered) {
-      const slot = safeSlots.find(ls => ls.id === entry.lesson_slot_id);
+      const key = `${entry.day_of_week}-${entry.time_slot_id}`;
+      // Also find the time for display
+      const slot = safeSlots.find(ls => ls.time_slot_id === entry.time_slot_id && ls.day_of_week === entry.day_of_week);
       if (slot) {
-        const key = `${slot.day_of_week}-${slot.start_time}-${slot.end_time}`;
-        const list = map.get(key) || [];
+        const displayKey = `${slot.day_of_week}-${slot.start_time}-${slot.end_time}`;
+        const list = map.get(displayKey) || [];
         list.push(entry);
-        map.set(key, list);
+        map.set(displayKey, list);
       }
     }
     return map;
   }, [safeEntries, safeSlots, filterGroupId, filterTeacherId]);
 
+  if (activeDays.length === 0) {
+    return <p className="text-center text-muted-foreground py-12">No time slots configured. Add time slots first.</p>;
+  }
+
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[800px]">
-        <div className="grid grid-cols-[100px_repeat(6,1fr)] gap-1 mb-1">
+        <div className={`grid gap-1 mb-1`} style={{ gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
           <div className="p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time</div>
-          {DAYS.map(day => (
+          {activeDays.map(day => (
             <div key={day} className="p-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-card rounded-lg">
               <span className="hidden sm:inline">{day}</span>
               <span className="sm:hidden">{DAY_SHORT[day]}</span>
@@ -64,53 +77,49 @@ export function WeeklyGrid({
           ))}
         </div>
 
-        {timeSlots.map(ts => {
-          const isBreak = ts.start === '12:20' || ts.start === '13:05';
-          return (
-            <div key={`${ts.start}-${ts.end}`} className="grid grid-cols-[100px_repeat(6,1fr)] gap-1 mb-1">
-              <div className={cn("flex flex-col justify-center px-3 py-2 text-xs font-medium", isBreak ? "text-accent" : "text-muted-foreground")}>
-                <span>{ts.start}</span>
-                <span className="text-[10px] opacity-60">{ts.end}</span>
-              </div>
+        {timeSlots.map(ts => (
+          <div key={`${ts.start}-${ts.end}`} className="gap-1 mb-1" style={{ display: 'grid', gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
+            <div className="flex flex-col justify-center px-3 py-2 text-xs font-medium text-muted-foreground">
+              <span>{ts.start}</span>
+              <span className="text-[10px] opacity-60">{ts.end}</span>
+            </div>
 
-              {DAYS.map(day => {
-                const key = `${day}-${ts.start}-${ts.end}`;
-                const cellEntries = entryMap.get(key) || [];
+            {activeDays.map(day => {
+              const key = `${day}-${ts.start}-${ts.end}`;
+              const cellEntries = entryMap.get(key) || [];
 
-                if (cellEntries.length === 0) {
-                  return (
-                    <div key={key} className="bg-card/50 rounded-lg border border-border/50 min-h-[60px] flex items-center justify-center hover:bg-muted/50 transition-colors cursor-pointer">
-                      <span className="text-xs text-muted-foreground/30">—</span>
-                    </div>
-                  );
-                }
-
-                // Show first entry (or stack if multiple due to "all groups" view)
-                const entry = cellEntries[0];
-                const subject = getSubjectById(entry.subject_id);
-                const teacher = getTeacherById(entry.teacher_id);
-                const classroom = getClassroomById(entry.classroom_id);
-
+              if (cellEntries.length === 0) {
                 return (
-                  <div
-                    key={key}
-                    className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative"
-                    style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}
-                  >
-                    <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
-                    <div className="text-[10px] opacity-80 space-y-0.5">
-                      <div className="truncate">{teacher?.name}</div>
-                      <div className="truncate">{classroom?.name}</div>
-                    </div>
-                    {cellEntries.length > 1 && (
-                      <span className="absolute top-1 right-1 bg-white/30 text-[9px] px-1 rounded">+{cellEntries.length - 1}</span>
-                    )}
+                  <div key={key} className="bg-card/50 rounded-lg border border-border/50 min-h-[60px] flex items-center justify-center hover:bg-muted/50 transition-colors cursor-pointer">
+                    <span className="text-xs text-muted-foreground/30">—</span>
                   </div>
                 );
-              })}
-            </div>
-          );
-        })}
+              }
+
+              const entry = cellEntries[0];
+              const subject = getSubjectById(entry.subject_id);
+              const teacher = getTeacherById(entry.teacher_id);
+              const classroom = getClassroomById(entry.classroom_id);
+
+              return (
+                <div
+                  key={key}
+                  className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative"
+                  style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}
+                >
+                  <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
+                  <div className="text-[10px] opacity-80 space-y-0.5">
+                    <div className="truncate">{teacher?.name}</div>
+                    <div className="truncate">{classroom?.name}</div>
+                  </div>
+                  {cellEntries.length > 1 && (
+                    <span className="absolute top-1 right-1 bg-white/30 text-[9px] px-1 rounded">+{cellEntries.length - 1}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

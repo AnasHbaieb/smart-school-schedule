@@ -4,7 +4,7 @@ import { Users, DoorOpen, GraduationCap, Calendar, AlertTriangle, BookOpen, Cloc
 import { getScheduleStats } from '@/lib/scheduler';
 
 export default function Dashboard() {
-  const { teachers, classrooms, studentGroups, subjects, timetableEntries, lessonSlots, timeSlotDefs } = useData();
+  const { teachers, classrooms, studentGroups, subjects, timetableEntries, lessonSlots, timeSlotDefs, loading } = useData();
 
   const stats = getScheduleStats(timetableEntries, studentGroups, lessonSlots);
 
@@ -15,6 +15,10 @@ export default function Dashboard() {
     { label: 'Subjects', value: subjects.length, icon: BookOpen, color: 'text-[hsl(280,65%,60%)]' },
     { label: 'Time Slots', value: timeSlotDefs.length, icon: Clock, color: 'text-[hsl(167,72%,42%)]' },
   ];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Loading data...</p></div>;
+  }
 
   return (
     <div className="space-y-8">

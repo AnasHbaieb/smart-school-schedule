@@ -5,9 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Users, Trash2, Pencil } from 'lucide-react';
+import { Plus, Users, Trash2, Pencil, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 export default function TeachersPage() {
   const { teachers, subjects, addTeacher, updateTeacher, deleteTeacher, getSubjectById } = useData();
@@ -16,23 +17,37 @@ export default function TeachersPage() {
   const [name, setName] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [hours, setHours] = useState('');
-  const [section, setSection] = useState('');
+  const [sectionInput, setSectionInput] = useState('');
+  const [sections, setSections] = useState<string[]>([]);
 
   const openAdd = () => {
-    setEditId(null); setName(''); setSubjectId(subjects[0]?.id || ''); setHours(''); setSection('');
+    setEditId(null); setName(''); setSubjectId(subjects[0]?.id || ''); setHours(''); setSections([]); setSectionInput('');
     setDialogOpen(true);
   };
 
   const openEdit = (id: string) => {
     const t = teachers.find(x => x.id === id);
     if (!t) return;
-    setEditId(id); setName(t.name); setSubjectId(t.subject_id); setHours(String(t.hours_per_week)); setSection(t.section);
+    setEditId(id); setName(t.name); setSubjectId(t.subject_id); setHours(String(t.hours_per_week)); setSections([...t.sections]); setSectionInput('');
     setDialogOpen(true);
   };
 
+  const addSection = () => {
+    const val = sectionInput.trim();
+    if (!val) return;
+    if (sections.includes(val)) { toast.error('Already added'); return; }
+    setSections(prev => [...prev, val]);
+    setSectionInput('');
+  };
+
+  const removeSection = (s: string) => {
+    setSections(prev => prev.filter(x => x !== s));
+  };
+
   const handleSave = () => {
-    if (!name || !subjectId || !hours || !section) { toast.error('Please fill all fields'); return; }
-    const data = { name, subject_id: subjectId, hours_per_week: parseInt(hours), section };
+    if (!name || !subjectId || !hours) { toast.error('Please fill all fields'); return; }
+    if (sections.length === 0) { toast.error('Add at least one grade/section'); return; }
+    const data = { name, subject_id: subjectId, hours_per_week: parseInt(hours), sections };
     if (editId) { updateTeacher(editId, data); toast.success('Teacher updated'); }
     else { addTeacher(data); toast.success('Teacher added'); }
     setDialogOpen(false);
@@ -61,7 +76,7 @@ export default function TeachersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Hours/Week</TableHead>
-                <TableHead>Section</TableHead>
+                <TableHead>Grade / Section</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -77,7 +92,13 @@ export default function TeachersPage() {
                       </span>
                     </TableCell>
                     <TableCell>{t.hours_per_week}h</TableCell>
-                    <TableCell>{t.section}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {t.sections.map(s => (
+                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(t.id)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteTeacher(t.id); toast.success('Teacher deleted'); }}>
@@ -87,6 +108,9 @@ export default function TeachersPage() {
                   </TableRow>
                 );
               })}
+              {teachers.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No teachers yet.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -105,7 +129,21 @@ export default function TeachersPage() {
               </Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Hours/Week</label><Input type="number" value={hours} onChange={e => setHours(e.target.value)} /></div>
-            <div className="space-y-2"><label className="text-sm font-medium">Section</label><Input value={section} onChange={e => setSection(e.target.value)} /></div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Grade / Section (e.g. 10A, 11B)</label>
+              <div className="flex gap-2">
+                <Input value={sectionInput} onChange={e => setSectionInput(e.target.value)} placeholder="e.g. 10A" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSection())} />
+                <Button type="button" variant="outline" onClick={addSection}>Add</Button>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {sections.map(s => (
+                  <Badge key={s} variant="secondary" className="gap-1">
+                    {s}
+                    <button onClick={() => removeSection(s)}><X className="w-3 h-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
