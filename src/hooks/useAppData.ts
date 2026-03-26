@@ -139,7 +139,7 @@ export function useAppData() {
   const addTimeSlot = useCallback(async (ts: Omit<TimeSlotDef, 'id'>) => {
     const { data, error } = await supabase.from('time_slots').insert({ start_time: ts.start_time, end_time: ts.end_time, days: ts.days }).select().single();
     if (error) { console.error(error); return; }
-    setTimeSlotDefs(prev => [...prev, { id: data.id, start_time: data.start_time, end_time: data.end_time, days: data.days || DAYS }].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+    setTimeSlotDefs(prev => [...prev, { id: data.id, start_time: data.start_time, end_time: data.end_time, days: (data.days || DAYS) as DayOfWeek[] }].sort((a, b) => a.start_time.localeCompare(b.start_time)));
   }, []);
   const updateTimeSlot = useCallback(async (id: string, ts: Partial<TimeSlotDef>) => {
     const update: any = {};
