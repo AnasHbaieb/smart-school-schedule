@@ -49,7 +49,7 @@ export function WeeklyGrid({
       }
     }
     return map;
-  }, [entries, lessonSlots, filterGroupId, filterTeacherId]);
+  }, [safeEntries, safeSlots, filterGroupId, filterTeacherId]);
 
   return (
     <div className="overflow-x-auto">
