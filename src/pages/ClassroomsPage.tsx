@@ -14,25 +14,25 @@ export default function ClassroomsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [isAll, setIsAll] = useState(true);
+  const [isGeneral, setIsGeneral] = useState(true);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
-  const openAdd = () => { setEditId(null); setName(''); setIsAll(true); setSelectedSubjects([]); setDialogOpen(true); };
+  const openAdd = () => { setEditId(null); setName(''); setIsGeneral(true); setSelectedSubjects([]); setDialogOpen(true); };
   const openEdit = (id: string) => {
     const c = classrooms.find(x => x.id === id);
     if (!c) return;
     setEditId(id); setName(c.name);
-    setIsAll(c.subject_ids.includes('all'));
-    setSelectedSubjects(c.subject_ids.includes('all') ? [] : c.subject_ids);
+    setIsGeneral(c.is_general);
+    setSelectedSubjects(c.is_general ? [] : [...c.subject_ids]);
     setDialogOpen(true);
   };
 
   const handleSave = () => {
     if (!name) { toast.error('Please enter a name'); return; }
-    const subject_ids = isAll ? ['all'] : selectedSubjects;
-    if (!isAll && selectedSubjects.length === 0) { toast.error('Select at least one subject'); return; }
-    if (editId) { updateClassroom(editId, { name, subject_ids }); toast.success('Classroom updated'); }
-    else { addClassroom({ name, subject_ids }); toast.success('Classroom added'); }
+    if (!isGeneral && selectedSubjects.length === 0) { toast.error('Select at least one subject'); return; }
+    const data = { name, is_general: isGeneral, subject_ids: isGeneral ? [] : selectedSubjects };
+    if (editId) { updateClassroom(editId, data); toast.success('Classroom updated'); }
+    else { addClassroom(data); toast.success('Classroom added'); }
     setDialogOpen(false);
   };
 
@@ -70,7 +70,7 @@ export default function ClassroomsPage() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>
-                    {c.subject_ids.includes('all') ? (
+                    {c.is_general ? (
                       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">All</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
@@ -89,6 +89,9 @@ export default function ClassroomsPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {classrooms.length === 0 && (
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No classrooms yet.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -103,16 +106,16 @@ export default function ClassroomsPage() {
               <label className="text-sm font-medium">Type</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={isAll} onCheckedChange={() => { setIsAll(true); setSelectedSubjects([]); }} />
+                  <Checkbox checked={isGeneral} onCheckedChange={() => { setIsGeneral(true); setSelectedSubjects([]); }} />
                   <span className="text-sm">Regular (All subjects)</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={!isAll} onCheckedChange={() => setIsAll(false)} />
+                  <Checkbox checked={!isGeneral} onCheckedChange={() => setIsGeneral(false)} />
                   <span className="text-sm">Specialized</span>
                 </label>
               </div>
             </div>
-            {!isAll && (
+            {!isGeneral && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Select Subjects</label>
                 <div className="space-y-2">

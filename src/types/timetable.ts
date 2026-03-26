@@ -11,19 +11,19 @@ export interface Teacher {
   name: string;
   subject_id: string;
   hours_per_week: number;
-  section: string;
+  sections: string[]; // e.g. ['10A', '11B'] - multiple grade/sections
 }
 
 export interface Classroom {
   id: string;
   name: string;
-  subject_ids: string[]; // ['all'] for regular, or specific subject IDs for specialized
+  is_general: boolean;
+  subject_ids: string[]; // UUID[] for specialized, empty for general
 }
 
 export interface Subject {
   id: string;
   title: string;
-  weekly_hours: number;
   color: string;
 }
 
@@ -31,31 +31,31 @@ export interface StudentGroup {
   id: string;
   grade: string;
   section: string;
+  class_name: string;
   subjects: { subject_id: string; hours_per_week: number }[];
+}
+
+export interface TimeSlotDef {
+  id: string;
+  start_time: string;
+  end_time: string;
+  days: DayOfWeek[];
 }
 
 export interface LessonSlot {
   id: string;
   day_of_week: DayOfWeek;
-  start_time: string; // HH:mm
+  start_time: string;
   end_time: string;
+  time_slot_id: string;
 }
 
 export interface TimetableEntry {
   id: string;
-  lesson_slot_id: string;
+  time_slot_id: string;
+  day_of_week: DayOfWeek;
   teacher_id: string;
   classroom_id: string;
   subject_id: string;
   student_group_id: string;
 }
-
-// Subject color map for UI
-export const SUBJECT_COLORS: Record<string, string> = {
-  math: 'bg-[hsl(243,75%,59%)]',
-  science: 'bg-[hsl(167,72%,42%)]',
-  english: 'bg-[hsl(25,95%,53%)]',
-  history: 'bg-[hsl(340,65%,55%)]',
-  art: 'bg-[hsl(280,65%,60%)]',
-  pe: 'bg-[hsl(200,80%,50%)]',
-};

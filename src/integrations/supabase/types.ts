@@ -14,7 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      classrooms: {
+        Row: {
+          created_at: string
+          id: string
+          is_general: boolean
+          name: string
+          subject_ids: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_general?: boolean
+          name: string
+          subject_ids?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_general?: boolean
+          name?: string
+          subject_ids?: string[]
+        }
+        Relationships: []
+      }
+      student_groups: {
+        Row: {
+          class_name: string
+          created_at: string
+          grade: string
+          id: string
+          section: string
+          subjects: Json
+        }
+        Insert: {
+          class_name?: string
+          created_at?: string
+          grade: string
+          id?: string
+          section: string
+          subjects?: Json
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          grade?: string
+          id?: string
+          section?: string
+          subjects?: Json
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          hours_per_week: number
+          id: string
+          name: string
+          sections: string[]
+          subject_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          hours_per_week?: number
+          id?: string
+          name: string
+          sections?: string[]
+          subject_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          hours_per_week?: number
+          id?: string
+          name?: string
+          sections?: string[]
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teachers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_slots: {
+        Row: {
+          created_at: string
+          days: string[]
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          end_time: string
+          id?: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      timetable_entries: {
+        Row: {
+          classroom_id: string
+          created_at: string
+          day_of_week: string
+          id: string
+          student_group_id: string
+          subject_id: string
+          teacher_id: string
+          time_slot_id: string
+        }
+        Insert: {
+          classroom_id: string
+          created_at?: string
+          day_of_week: string
+          id?: string
+          student_group_id: string
+          subject_id: string
+          teacher_id: string
+          time_slot_id: string
+        }
+        Update: {
+          classroom_id?: string
+          created_at?: string
+          day_of_week?: string
+          id?: string
+          student_group_id?: string
+          subject_id?: string
+          teacher_id?: string
+          time_slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_entries_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_student_group_id_fkey"
+            columns: ["student_group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_time_slot_id_fkey"
+            columns: ["time_slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

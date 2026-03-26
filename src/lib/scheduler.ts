@@ -8,87 +8,12 @@ interface SchedulerInput {
   lessonSlots: LessonSlot[];
 }
 
-interface ConflictCheck {
-  teacherConflict: boolean;
-  classroomConflict: boolean;
-  groupConflict: boolean;
-}
-
-export function checkConflicts(
-  entries: TimetableEntry[],
-  slotId: string,
-  teacherId: string,
-  classroomId: string,
-  groupId: string,
-  excludeEntryId?: string
-): ConflictCheck {
-  const slotEntries = entries.filter(
-    e => e.lesson_slot_id === slotId && e.id !== excludeEntryId
-  );
-
-  return {
-    teacherConflict: slotEntries.some(e => e.teacher_id === teacherId),
-    classroomConflict: slotEntries.some(e => e.classroom_id === classroomId),
-    groupConflict: slotEntries.some(e => e.student_group_id === groupId),
-  };
-}
-
-export function hasAnyConflict(
-  entries: TimetableEntry[],
-  slotId: string,
-  teacherId: string,
-  classroomId: string,
-  groupId: string,
-  excludeEntryId?: string
-): boolean {
-  const c = checkConflicts(entries, slotId, teacherId, classroomId, groupId, excludeEntryId);
-  return c.teacherConflict || c.classroomConflict || c.groupConflict;
-}
-
-function findClassroomForSubject(
-  classrooms: Classroom[],
-  subjectId: string,
-  entries: TimetableEntry[],
-  slotId: string
-): Classroom | undefined {
-  // Prefer specialized classrooms first, then general ones
-  const specialized = classrooms.filter(
-    c => c.subject_ids.includes(subjectId) && !c.subject_ids.includes('all')
-  );
-  const general = classrooms.filter(c => c.subject_ids.includes('all'));
-
-  for (const c of [...specialized, ...general]) {
-    const occupied = entries.some(e => e.lesson_slot_id === slotId && e.classroom_id === c.id);
-    if (!occupied) return c;
-  }
-  return undefined;
-}
-
-function findTeacherForSubject(
-  teachers: Teacher[],
-  subjectId: string,
-  entries: TimetableEntry[],
-  slotId: string,
-  teacherHoursUsed: Map<string, number>
-): Teacher | undefined {
-  const subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
-
-  for (const t of subjectTeachers) {
-    const hoursUsed = teacherHoursUsed.get(t.id) || 0;
-    if (hoursUsed >= t.hours_per_week) continue;
-    const occupied = entries.some(e => e.lesson_slot_id === slotId && e.teacher_id === t.id);
-    if (!occupied) return t;
-  }
-  return undefined;
-}
-
 export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const { teachers, classrooms, subjects, studentGroups, lessonSlots } = input;
   const entries: TimetableEntry[] = [];
   const teacherHoursUsed = new Map<string, number>();
   let entryId = 1;
 
-  // Sort slots by day then time for consistent scheduling
   const sortedSlots = [...lessonSlots].sort((a, b) => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayDiff = dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
@@ -96,48 +21,55 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     return a.start_time.localeCompare(b.start_time);
   });
 
-  // For each student group, schedule their subjects
   for (const group of studentGroups) {
-    // Track remaining hours per subject for this group
     const remainingHours = new Map<string, number>();
     for (const gs of group.subjects) {
       remainingHours.set(gs.subject_id, gs.hours_per_week);
     }
 
-    // Greedy: iterate slots and try to fill
     for (const slot of sortedSlots) {
-      // Check if group already has a lesson in this slot
       const groupOccupied = entries.some(
-        e => e.lesson_slot_id === slot.id && e.student_group_id === group.id
+        e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.student_group_id === group.id
       );
       if (groupOccupied) continue;
 
-      // Find a subject that still needs hours
-      // Prioritize subjects with more remaining hours
       const subjectEntries = Array.from(remainingHours.entries())
         .filter(([, hrs]) => hrs > 0)
         .sort((a, b) => b[1] - a[1]);
 
-      let scheduled = false;
       for (const [subjectId] of subjectEntries) {
-        const teacher = findTeacherForSubject(teachers, subjectId, entries, slot.id, teacherHoursUsed);
-        if (!teacher) continue;
+        const subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
+        let foundTeacher: Teacher | undefined;
+        for (const t of subjectTeachers) {
+          const hoursUsed = teacherHoursUsed.get(t.id) || 0;
+          if (hoursUsed >= t.hours_per_week) continue;
+          const occupied = entries.some(e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.teacher_id === t.id);
+          if (!occupied) { foundTeacher = t; break; }
+        }
+        if (!foundTeacher) continue;
 
-        const classroom = findClassroomForSubject(classrooms, subjectId, entries, slot.id);
-        if (!classroom) continue;
+        // Find classroom
+        const specialized = classrooms.filter(c => !c.is_general && c.subject_ids.includes(subjectId));
+        const general = classrooms.filter(c => c.is_general);
+        let foundClassroom: Classroom | undefined;
+        for (const c of [...specialized, ...general]) {
+          const occupied = entries.some(e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.classroom_id === c.id);
+          if (!occupied) { foundClassroom = c; break; }
+        }
+        if (!foundClassroom) continue;
 
         entries.push({
           id: `auto_${entryId++}`,
-          lesson_slot_id: slot.id,
-          teacher_id: teacher.id,
-          classroom_id: classroom.id,
+          time_slot_id: slot.time_slot_id,
+          day_of_week: slot.day_of_week,
+          teacher_id: foundTeacher.id,
+          classroom_id: foundClassroom.id,
           subject_id: subjectId,
           student_group_id: group.id,
         });
 
         remainingHours.set(subjectId, (remainingHours.get(subjectId) || 1) - 1);
-        teacherHoursUsed.set(teacher.id, (teacherHoursUsed.get(teacher.id) || 0) + 1);
-        scheduled = true;
+        teacherHoursUsed.set(foundTeacher.id, (teacherHoursUsed.get(foundTeacher.id) || 0) + 1);
         break;
       }
     }
@@ -153,33 +85,24 @@ export function getScheduleStats(
 ) {
   const conflicts: string[] = [];
 
-  // Check for double-booking
-  for (const slot of lessonSlots) {
-    const slotEntries = entries.filter(e => e.lesson_slot_id === slot.id);
+  // Check for double-booking by time_slot_id + day_of_week
+  const slotKeys = new Set(entries.map(e => `${e.time_slot_id}_${e.day_of_week}`));
+  for (const key of slotKeys) {
+    const slotEntries = entries.filter(e => `${e.time_slot_id}_${e.day_of_week}` === key);
 
-    // Teacher conflicts
     const teacherIds = slotEntries.map(e => e.teacher_id);
     const dupTeachers = teacherIds.filter((id, i) => teacherIds.indexOf(id) !== i);
-    for (const t of dupTeachers) {
-      conflicts.push(`Teacher ${t} double-booked on ${slot.day_of_week} ${slot.start_time}`);
-    }
+    for (const t of dupTeachers) conflicts.push(`Teacher double-booked: ${key}`);
 
-    // Classroom conflicts
     const classroomIds = slotEntries.map(e => e.classroom_id);
     const dupClassrooms = classroomIds.filter((id, i) => classroomIds.indexOf(id) !== i);
-    for (const c of dupClassrooms) {
-      conflicts.push(`Classroom ${c} double-booked on ${slot.day_of_week} ${slot.start_time}`);
-    }
+    for (const c of dupClassrooms) conflicts.push(`Classroom double-booked: ${key}`);
 
-    // Group conflicts
     const groupIds = slotEntries.map(e => e.student_group_id);
     const dupGroups = groupIds.filter((id, i) => groupIds.indexOf(id) !== i);
-    for (const g of dupGroups) {
-      conflicts.push(`Group ${g} double-booked on ${slot.day_of_week} ${slot.start_time}`);
-    }
+    for (const g of dupGroups) conflicts.push(`Group double-booked: ${key}`);
   }
 
-  // Coverage: how many required hours are fulfilled
   let totalRequired = 0;
   let totalFilled = 0;
   for (const group of studentGroups) {
