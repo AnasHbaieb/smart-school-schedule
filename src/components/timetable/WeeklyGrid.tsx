@@ -1,6 +1,17 @@
 import { useMemo } from 'react';
-import { DAYS, DAY_SHORT, DayOfWeek, TimetableEntry, LessonSlot, Subject, Teacher, Classroom } from '@/types/timetable';
+import { DAYS, DayOfWeek, TimetableEntry, LessonSlot, Subject, Teacher, Classroom } from '@/types/timetable';
+import { useLang } from '@/contexts/LanguageContext';
+import { TranslationKey } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
+
+const DAY_KEY_MAP: Record<DayOfWeek, TranslationKey> = {
+  Monday: 'monday', Tuesday: 'tuesday', Wednesday: 'wednesday',
+  Thursday: 'thursday', Friday: 'friday', Saturday: 'saturday',
+};
+const DAY_SHORT_KEY_MAP: Record<DayOfWeek, TranslationKey> = {
+  Monday: 'mon', Tuesday: 'tue', Wednesday: 'wed',
+  Thursday: 'thu', Friday: 'fri', Saturday: 'sat',
+};
 
 interface WeeklyGridProps {
   entries: TimetableEntry[];
@@ -13,14 +24,10 @@ interface WeeklyGridProps {
 }
 
 export function WeeklyGrid({
-  entries,
-  lessonSlots,
-  filterGroupId,
-  filterTeacherId,
-  getSubjectById,
-  getTeacherById,
-  getClassroomById,
+  entries, lessonSlots, filterGroupId, filterTeacherId,
+  getSubjectById, getTeacherById, getClassroomById,
 }: WeeklyGridProps) {
+  const { t } = useLang();
   const safeSlots = lessonSlots || [];
   const safeEntries = entries || [];
 
@@ -33,7 +40,6 @@ export function WeeklyGrid({
     return Array.from(seen.values()).sort((a, b) => a.start.localeCompare(b.start));
   }, [safeSlots]);
 
-  // Which days actually have slots
   const activeDays = useMemo(() => {
     const daySet = new Set<DayOfWeek>();
     for (const ls of safeSlots) daySet.add(ls.day_of_week);
@@ -45,10 +51,7 @@ export function WeeklyGrid({
     let filtered = safeEntries;
     if (filterGroupId) filtered = filtered.filter(e => e.student_group_id === filterGroupId);
     if (filterTeacherId) filtered = filtered.filter(e => e.teacher_id === filterTeacherId);
-
     for (const entry of filtered) {
-      const key = `${entry.day_of_week}-${entry.time_slot_id}`;
-      // Also find the time for display
       const slot = safeSlots.find(ls => ls.time_slot_id === entry.time_slot_id && ls.day_of_week === entry.day_of_week);
       if (slot) {
         const displayKey = `${slot.day_of_week}-${slot.start_time}-${slot.end_time}`;
@@ -61,18 +64,18 @@ export function WeeklyGrid({
   }, [safeEntries, safeSlots, filterGroupId, filterTeacherId]);
 
   if (activeDays.length === 0) {
-    return <p className="text-center text-muted-foreground py-12">No time slots configured. Add time slots first.</p>;
+    return <p className="text-center text-muted-foreground py-12">{t('noTimeSlotsConfigured')}</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[800px]">
-        <div className={`grid gap-1 mb-1`} style={{ gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
-          <div className="p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time</div>
+        <div className="gap-1 mb-1" style={{ display: 'grid', gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
+          <div className="p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('time')}</div>
           {activeDays.map(day => (
             <div key={day} className="p-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-card rounded-lg">
-              <span className="hidden sm:inline">{day}</span>
-              <span className="sm:hidden">{DAY_SHORT[day]}</span>
+              <span className="hidden sm:inline">{t(DAY_KEY_MAP[day])}</span>
+              <span className="sm:hidden">{t(DAY_SHORT_KEY_MAP[day])}</span>
             </div>
           ))}
         </div>
@@ -83,11 +86,9 @@ export function WeeklyGrid({
               <span>{ts.start}</span>
               <span className="text-[10px] opacity-60">{ts.end}</span>
             </div>
-
             {activeDays.map(day => {
               const key = `${day}-${ts.start}-${ts.end}`;
               const cellEntries = entryMap.get(key) || [];
-
               if (cellEntries.length === 0) {
                 return (
                   <div key={key} className="bg-card/50 rounded-lg border border-border/50 min-h-[60px] flex items-center justify-center hover:bg-muted/50 transition-colors cursor-pointer">
@@ -95,18 +96,12 @@ export function WeeklyGrid({
                   </div>
                 );
               }
-
               const entry = cellEntries[0];
               const subject = getSubjectById(entry.subject_id);
               const teacher = getTeacherById(entry.teacher_id);
               const classroom = getClassroomById(entry.classroom_id);
-
               return (
-                <div
-                  key={key}
-                  className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative"
-                  style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}
-                >
+                <div key={key} className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative" style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}>
                   <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
                   <div className="text-[10px] opacity-80 space-y-0.5">
                     <div className="truncate">{teacher?.name}</div>

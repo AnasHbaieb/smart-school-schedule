@@ -1,39 +1,39 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Calendar, Users, BookOpen, DoorOpen, GraduationCap,
-  LayoutDashboard, Moon, Sun, Clock
+  LayoutDashboard, Moon, Sun, Clock, Languages
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
-
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/timetable', icon: Calendar, label: 'Timetable' },
-  { to: '/teachers', icon: Users, label: 'Teachers' },
-  { to: '/subjects', icon: BookOpen, label: 'Subjects' },
-  { to: '/classrooms', icon: DoorOpen, label: 'Classrooms' },
-  { to: '/groups', icon: GraduationCap, label: 'Student Groups' },
-  { to: '/slots', icon: Clock, label: 'Time Slots' },
-];
+import { useLang } from '@/contexts/LanguageContext';
 
 export function AppSidebar() {
   const location = useLocation();
   const { theme, toggle } = useTheme();
+  const { t, lang, toggle: toggleLang } = useLang();
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: t('navDashboard') },
+    { to: '/timetable', icon: Calendar, label: t('navTimetable') },
+    { to: '/teachers', icon: Users, label: t('navTeachers') },
+    { to: '/subjects', icon: BookOpen, label: t('navSubjects') },
+    { to: '/classrooms', icon: DoorOpen, label: t('navClassrooms') },
+    { to: '/groups', icon: GraduationCap, label: t('navStudentGroups') },
+    { to: '/slots', icon: Clock, label: t('navTimeSlots') },
+  ];
 
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-sidebar text-sidebar-foreground min-h-screen">
-      {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
         <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
           <Calendar className="w-5 h-5 text-sidebar-primary-foreground" />
         </div>
         <span className="text-lg font-bold tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-          SmartTimetable
+          {t('appName')}
         </span>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 space-y-1">
         {navItems.map(item => {
           const active = location.pathname === item.to;
@@ -55,8 +55,16 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Dark mode toggle */}
-      <div className="px-3 py-4 border-t border-sidebar-border">
+      <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleLang}
+          className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        >
+          <Languages className="w-4 h-4" />
+          {lang === 'ar' ? 'English' : 'العربية'}
+        </Button>
         <Button
           variant="ghost"
           size="sm"
@@ -64,7 +72,7 @@ export function AppSidebar() {
           className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          {theme === 'dark' ? t('lightMode') : t('darkMode')}
         </Button>
       </div>
     </aside>

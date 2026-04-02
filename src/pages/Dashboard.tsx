@@ -1,30 +1,32 @@
 import { useData } from '@/contexts/AppDataContext';
+import { useLang } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, DoorOpen, GraduationCap, Calendar, AlertTriangle, BookOpen, Clock } from 'lucide-react';
 import { getScheduleStats } from '@/lib/scheduler';
 
 export default function Dashboard() {
   const { teachers, classrooms, studentGroups, subjects, timetableEntries, lessonSlots, timeSlotDefs, loading } = useData();
+  const { t } = useLang();
 
   const stats = getScheduleStats(timetableEntries, studentGroups, lessonSlots);
 
   const cards = [
-    { label: 'Teachers', value: teachers.length, icon: Users, color: 'text-primary' },
-    { label: 'Classrooms', value: classrooms.length, icon: DoorOpen, color: 'text-[hsl(25,95%,53%)]' },
-    { label: 'Student Groups', value: studentGroups.length, icon: GraduationCap, color: 'text-[hsl(340,65%,55%)]' },
-    { label: 'Subjects', value: subjects.length, icon: BookOpen, color: 'text-[hsl(280,65%,60%)]' },
-    { label: 'Time Slots', value: timeSlotDefs.length, icon: Clock, color: 'text-[hsl(167,72%,42%)]' },
+    { label: t('teachers'), value: teachers.length, icon: Users, color: 'text-primary' },
+    { label: t('classrooms'), value: classrooms.length, icon: DoorOpen, color: 'text-[hsl(25,95%,53%)]' },
+    { label: t('studentGroups'), value: studentGroups.length, icon: GraduationCap, color: 'text-[hsl(340,65%,55%)]' },
+    { label: t('subjects'), value: subjects.length, icon: BookOpen, color: 'text-[hsl(280,65%,60%)]' },
+    { label: t('timeSlots'), value: timeSlotDefs.length, icon: Clock, color: 'text-[hsl(167,72%,42%)]' },
   ];
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Loading data...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('loadingData')}</p></div>;
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome to SmartTimetable — manage your school schedule.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('dashboardTitle')}</h1>
+        <p className="text-muted-foreground mt-1">{t('dashboardSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -46,12 +48,12 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="w-5 h-5 text-primary" />
-              Scheduled Lessons
+              {t('scheduledLessons')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-primary">{timetableEntries.length}</div>
-            <p className="text-sm text-muted-foreground mt-1">Total lessons scheduled this week</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('totalLessonsScheduled')}</p>
           </CardContent>
         </Card>
 
@@ -59,13 +61,13 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <AlertTriangle className="w-5 h-5 text-destructive" />
-              Conflicts
+              {t('conflicts')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className={`text-4xl font-bold ${stats.conflicts.length > 0 ? 'text-destructive' : 'text-accent'}`}>{stats.conflicts.length}</div>
             <p className="text-sm text-muted-foreground mt-1">
-              {stats.conflicts.length > 0 ? 'Scheduling conflicts detected!' : 'No scheduling conflicts detected'}
+              {stats.conflicts.length > 0 ? t('conflictsDetected') : t('noConflicts')}
             </p>
           </CardContent>
         </Card>
@@ -74,7 +76,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <BookOpen className="w-5 h-5 text-[hsl(280,65%,60%)]" />
-              Coverage
+              {t('coverage')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -82,7 +84,7 @@ export default function Dashboard() {
               {stats.coveragePercent}%
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {stats.totalFilled}/{stats.totalRequired} required hours filled
+              {stats.totalFilled}/{stats.totalRequired} {t('requiredHoursFilled')}
             </p>
           </CardContent>
         </Card>
