@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useData } from '@/contexts/AppDataContext';
+import { useLang } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 
 export default function ClassroomsPage() {
   const { classrooms, subjects, addClassroom, updateClassroom, deleteClassroom, getSubjectById } = useData();
+  const { t } = useLang();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -28,11 +30,11 @@ export default function ClassroomsPage() {
   };
 
   const handleSave = () => {
-    if (!name) { toast.error('Please enter a name'); return; }
-    if (!isGeneral && selectedSubjects.length === 0) { toast.error('Select at least one subject'); return; }
+    if (!name) { toast.error(t('enterName')); return; }
+    if (!isGeneral && selectedSubjects.length === 0) { toast.error(t('selectAtLeastOneSubject')); return; }
     const data = { name, is_general: isGeneral, subject_ids: isGeneral ? [] : selectedSubjects };
-    if (editId) { updateClassroom(editId, data); toast.success('Classroom updated'); }
-    else { addClassroom(data); toast.success('Classroom added'); }
+    if (editId) { updateClassroom(editId, data); toast.success(t('classroomUpdated')); }
+    else { addClassroom(data); toast.success(t('classroomAdded')); }
     setDialogOpen(false);
   };
 
@@ -44,25 +46,25 @@ export default function ClassroomsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Classrooms</h1>
-          <p className="text-muted-foreground mt-1">Manage rooms and their assigned subjects.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('classroomsTitle')}</h1>
+          <p className="text-muted-foreground mt-1">{t('classroomsSubtitle')}</p>
         </div>
-        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> Add Classroom</Button>
+        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> {t('addClassroom')}</Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DoorOpen className="w-5 h-5 text-primary" />
-            All Classrooms ({classrooms.length})
+            {t('allClassrooms')} ({classrooms.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('name')}</TableHead>
+                <TableHead>{t('subject')}</TableHead>
+                <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -71,7 +73,7 @@ export default function ClassroomsPage() {
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>
                     {c.is_general ? (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">All</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">{t('all')}</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {c.subject_ids.map(sid => {
@@ -83,14 +85,14 @@ export default function ClassroomsPage() {
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteClassroom(c.id); toast.success('Classroom deleted'); }}>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteClassroom(c.id); toast.success(t('classroomDeleted')); }}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {classrooms.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No classrooms yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">{t('noClassroomsYet')}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -99,25 +101,25 @@ export default function ClassroomsPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editId ? 'Edit Classroom' : 'Add Classroom'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editId ? t('editClassroom') : t('addClassroom')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><label className="text-sm font-medium">Name</label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">{t('name')}</label><Input value={name} onChange={e => setName(e.target.value)} /></div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Type</label>
+              <label className="text-sm font-medium">{t('type')}</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={isGeneral} onCheckedChange={() => { setIsGeneral(true); setSelectedSubjects([]); }} />
-                  <span className="text-sm">Regular (All subjects)</span>
+                  <span className="text-sm">{t('regular')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={!isGeneral} onCheckedChange={() => setIsGeneral(false)} />
-                  <span className="text-sm">Specialized</span>
+                  <span className="text-sm">{t('specialized')}</span>
                 </label>
               </div>
             </div>
             {!isGeneral && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Select Subjects</label>
+                <label className="text-sm font-medium">{t('selectSubjects')}</label>
                 <div className="space-y-2">
                   {subjects.map(s => (
                     <label key={s.id} className="flex items-center gap-2 cursor-pointer">
@@ -131,8 +133,8 @@ export default function ClassroomsPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{editId ? 'Update' : 'Add'}</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={handleSave}>{editId ? t('update') : t('add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

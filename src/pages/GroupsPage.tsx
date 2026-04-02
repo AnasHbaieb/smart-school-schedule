@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useData } from '@/contexts/AppDataContext';
+import { useLang } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 
 export default function GroupsPage() {
   const { studentGroups, subjects, addStudentGroup, updateStudentGroup, deleteStudentGroup, getSubjectById } = useData();
+  const { t } = useLang();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [grade, setGrade] = useState('');
@@ -34,12 +36,12 @@ export default function GroupsPage() {
   };
 
   const handleSave = () => {
-    if (!grade || !section) { toast.error('Please fill grade and section'); return; }
+    if (!grade || !section) { toast.error(t('fillGradeAndSection')); return; }
     const activeSubjects = subjectHours.filter(s => s.hours_per_week > 0);
-    if (activeSubjects.length === 0) { toast.error('Add at least one subject with hours'); return; }
+    if (activeSubjects.length === 0) { toast.error(t('addAtLeastOneSubjectHours')); return; }
     const data = { grade, section, class_name: className, subjects: activeSubjects };
-    if (editId) { updateStudentGroup(editId, data); toast.success('Group updated'); }
-    else { addStudentGroup(data); toast.success('Group added'); }
+    if (editId) { updateStudentGroup(editId, data); toast.success(t('groupUpdated')); }
+    else { addStudentGroup(data); toast.success(t('groupAdded')); }
     setDialogOpen(false);
   };
 
@@ -51,34 +53,34 @@ export default function GroupsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Student Groups</h1>
-          <p className="text-muted-foreground mt-1">Manage grades, sections, and their subject allocations.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('groupsTitle')}</h1>
+          <p className="text-muted-foreground mt-1">{t('groupsSubtitle')}</p>
         </div>
-        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> Add Group</Button>
+        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> {t('addGroup')}</Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-primary" />
-            All Groups ({studentGroups.length})
+            {t('allGroupsList')} ({studentGroups.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Grade</TableHead>
-                <TableHead>Section</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('grade')}</TableHead>
+                <TableHead>{t('section')}</TableHead>
+                <TableHead>{t('className')}</TableHead>
+                <TableHead>{t('subjects')}</TableHead>
+                <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {studentGroups.map(g => (
                 <TableRow key={g.id}>
-                  <TableCell className="font-medium">Grade {g.grade}</TableCell>
-                  <TableCell>Section {g.section}</TableCell>
+                  <TableCell className="font-medium">{t('grade')} {g.grade}</TableCell>
+                  <TableCell>{t('section')} {g.section}</TableCell>
                   <TableCell>{g.class_name || '—'}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -94,14 +96,14 @@ export default function GroupsPage() {
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(g.id)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteStudentGroup(g.id); toast.success('Group deleted'); }}>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteStudentGroup(g.id); toast.success(t('groupDeleted')); }}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {studentGroups.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No groups yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t('noGroupsYet')}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -110,15 +112,15 @@ export default function GroupsPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editId ? 'Edit Student Group' : 'Add Student Group'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editId ? t('editGroup') : t('addGroup')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Grade</label><Input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. 10" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Section</label><Input value={section} onChange={e => setSection(e.target.value)} placeholder="e.g. A" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Class</label><Input value={className} onChange={e => setClassName(e.target.value)} placeholder="e.g. Science" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('grade')}</label><Input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. 10" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('section')}</label><Input value={section} onChange={e => setSection(e.target.value)} placeholder="e.g. A" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('className')}</label><Input value={className} onChange={e => setClassName(e.target.value)} placeholder="e.g. Science" /></div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Subjects & Hours/Week</label>
+              <label className="text-sm font-medium">{t('subjectsAndHours')}</label>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {subjectHours.map(sh => {
                   const sub = getSubjectById(sh.subject_id);
@@ -132,14 +134,14 @@ export default function GroupsPage() {
                   );
                 })}
                 {subjectHours.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Add subjects first to assign hours.</p>
+                  <p className="text-sm text-muted-foreground">{t('addSubjectsFirst')}</p>
                 )}
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{editId ? 'Update' : 'Add'}</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={handleSave}>{editId ? t('update') : t('add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

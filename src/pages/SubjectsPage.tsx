@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useData } from '@/contexts/AppDataContext';
+import { useLang } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 
 export default function SubjectsPage() {
   const { subjects, addSubject, updateSubject, deleteSubject } = useData();
+  const { t } = useLang();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -24,10 +26,10 @@ export default function SubjectsPage() {
   };
 
   const handleSave = () => {
-    if (!title) { toast.error('Please enter a title'); return; }
+    if (!title) { toast.error(t('enterTitle')); return; }
     const data = { title, color };
-    if (editId) { updateSubject(editId, data); toast.success('Subject updated'); }
-    else { addSubject(data); toast.success('Subject added'); }
+    if (editId) { updateSubject(editId, data); toast.success(t('subjectUpdated')); }
+    else { addSubject(data); toast.success(t('subjectAdded')); }
     setDialogOpen(false);
   };
 
@@ -41,25 +43,25 @@ export default function SubjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Subjects</h1>
-          <p className="text-muted-foreground mt-1">Manage subjects and their colors.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('subjectsTitle')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subjectsSubtitle')}</p>
         </div>
-        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> Add Subject</Button>
+        <Button className="gap-2" onClick={openAdd}><Plus className="w-4 h-4" /> {t('addSubject')}</Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            All Subjects ({subjects.length})
+            {t('allSubjects')} ({subjects.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Color</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('color')}</TableHead>
+                <TableHead>{t('title')}</TableHead>
+                <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -69,14 +71,14 @@ export default function SubjectsPage() {
                   <TableCell className="font-medium">{s.title}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteSubject(s.id); toast.success('Subject deleted'); }}>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteSubject(s.id); toast.success(t('subjectDeleted')); }}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {subjects.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No subjects yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">{t('noSubjectsYet')}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -85,11 +87,11 @@ export default function SubjectsPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editId ? 'Edit Subject' : 'Add Subject'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editId ? t('editSubject') : t('addSubject')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><label className="text-sm font-medium">Title</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">{t('title')}</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Color</label>
+              <label className="text-sm font-medium">{t('color')}</label>
               <div className="flex gap-2 flex-wrap">
                 {presetColors.map(c => (
                   <button key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-md border-2 transition-transform ${color === c ? 'border-foreground scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} />
@@ -98,8 +100,8 @@ export default function SubjectsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{editId ? 'Update' : 'Add'}</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={handleSave}>{editId ? t('update') : t('add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
