@@ -23,24 +23,26 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <LanguageProvider>
-        <AppDataProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/timetable" element={<TimetablePage />} />
-                <Route path="/teachers" element={<TeachersPage />} />
-                <Route path="/subjects" element={<SubjectsPage />} />
-                <Route path="/classrooms" element={<ClassroomsPage />} />
-                <Route path="/groups" element={<GroupsPage />} />
-                <Route path="/slots" element={<SlotsPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AppDataProvider>
-      </LanguageProvider>
+      <PasswordGate>
+        <LanguageProvider>
+          <AppDataProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/timetable" element={<TimetablePage />} />
+                  <Route path="/teachers" element={<TeachersPage />} />
+                  <Route path="/subjects" element={<SubjectsPage />} />
+                  <Route path="/classrooms" element={<ClassroomsPage />} />
+                  <Route path="/groups" element={<GroupsPage />} />
+                  <Route path="/slots" element={<SlotsPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AppDataProvider>
+        </LanguageProvider>
+      </PasswordGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
