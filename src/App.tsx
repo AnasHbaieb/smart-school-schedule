@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppDataProvider } from "@/contexts/AppDataContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { PasswordGate } from "@/components/PasswordGate";
 import Dashboard from "@/pages/Dashboard";
 import TimetablePage from "@/pages/TimetablePage";
 import TeachersPage from "@/pages/TeachersPage";
