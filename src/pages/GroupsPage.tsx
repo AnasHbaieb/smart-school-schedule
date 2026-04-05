@@ -115,9 +115,9 @@ export default function GroupsPage() {
           <DialogHeader><DialogTitle>{editId ? t('editGroup') : t('addGroup')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2"><label className="text-sm font-medium">{t('grade')}</label><Input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. 10" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">{t('section')}</label><Input value={section} onChange={e => setSection(e.target.value)} placeholder="e.g. A" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">{t('className')}</label><Input value={className} onChange={e => setClassName(e.target.value)} placeholder="e.g. Science" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('grade')}</label><Input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. 1er" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('section')}</label><Input value={section} onChange={e => setSection(e.target.value)} placeholder="e.g. Science" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">{t('className')}</label><Input value={className} onChange={e => setClassName(e.target.value)} placeholder="e.g. 1" /></div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('subjectsAndHours')}</label>
