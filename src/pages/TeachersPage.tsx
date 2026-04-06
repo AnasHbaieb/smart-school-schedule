@@ -105,8 +105,7 @@ export default function TeachersPage() {
                 <TableHead>{t('name')}</TableHead>
                 <TableHead>{t('subject')}</TableHead>
                 <TableHead>{t('hoursPerWeek')}</TableHead>
-                <TableHead>{t('grade')}</TableHead>
-                <TableHead>{t('section')}</TableHead>
+                <TableHead>{t('classSection')}</TableHead>
                 <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -126,17 +125,8 @@ export default function TeachersPage() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {pairs.map((p, idx) => (
-                          <Badge key={`${teacher.id}_g_${p.raw}_${idx}`} variant="secondary" className="text-xs">
-                            {p.grade ? `${t('grade')} ${p.grade}` : '—'}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {pairs.map((p, idx) => (
-                          <Badge key={`${teacher.id}_s_${p.raw}_${idx}`} variant="secondary" className="text-xs">
-                            {p.section || p.raw}
+                          <Badge key={`${teacher.id}_c_${p.raw}_${idx}`} variant="secondary" className="text-xs">
+                            {p.grade && p.section ? `${t('grade')} ${p.grade} - ${p.section}` : p.raw}
                           </Badge>
                         ))}
                       </div>
@@ -151,7 +141,7 @@ export default function TeachersPage() {
                 );
               })}
               {teachers.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('noTeachersYet')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t('noTeachersYet')}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
