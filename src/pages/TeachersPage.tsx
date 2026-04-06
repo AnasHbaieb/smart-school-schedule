@@ -126,7 +126,7 @@ export default function TeachersPage() {
                       <div className="flex flex-wrap gap-1">
                         {pairs.map((p, idx) => (
                           <Badge key={`${teacher.id}_c_${p.raw}_${idx}`} variant="secondary" className="text-xs">
-                            {p.grade && p.section ? `${t('grade')} ${p.grade} - ${p.section}` : p.raw}
+                            {p.grade && p.section ? `${t('grade')} ${p.grade} ${p.section}` : p.raw}
                           </Badge>
                         ))}
                       </div>
@@ -190,7 +190,7 @@ export default function TeachersPage() {
                   <Badge key={s} variant="secondary" className="gap-1">
                     {(() => {
                       const p = normalizeSectionPair(s);
-                      if (p.grade && p.section) return `${t('grade')} ${p.grade} - ${p.section}`;
+                      if (p.grade && p.section) return `${t('grade')} ${p.grade} ${p.section}`;
                       return s;
                     })()}
                     <button onClick={() => removeSection(s)}><X className="w-3 h-3" /></button>
