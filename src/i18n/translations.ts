@@ -58,6 +58,7 @@ const translations = {
   actions: { en: 'Actions', ar: 'الإجراءات' },
   noTeachersYet: { en: 'No teachers yet.', ar: 'لا يوجد أساتذة بعد.' },
   gradeAndSection: { en: 'Grade (column) & Section (column)', ar: 'المستوى و الشعبة' },
+  classSection: { en: 'Class (Section)', ar: 'القسم (الشعبة)' },
   pickGradeAndSection: { en: 'Pick grade and section', ar: 'اختر المستوى و الشعبة' },
   alreadyAdded: { en: 'Already added', ar: 'مضاف مسبقًا' },
   fillAllFields: { en: 'Please fill all fields', ar: 'يرجى ملء جميع الحقول' },
