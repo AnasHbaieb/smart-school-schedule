@@ -80,12 +80,17 @@ export default function SlotsPage() {
                       <div className="h-px flex-1 bg-accent/30" />
                     </div>
                   )}
-                  <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                    <span className="text-sm font-bold text-primary w-8">P{i + 1}</span>
-                    <span className="text-sm font-medium">{slot.start_time}</span>
-                    <span className="text-xs text-muted-foreground">→</span>
-                    <span className="text-sm font-medium">{slot.end_time}</span>
-                    <div className="flex gap-1 ml-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-primary w-8">P{i + 1}</span>
+                      <span className="text-sm font-medium">{slot.start_time}</span>
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <span className="text-sm font-medium">{slot.end_time}</span>
+                      <span className="text-xs text-muted-foreground sm:hidden">
+                        ({slot.days.length} {t('days')})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 flex-wrap ps-11 sm:ps-0">
                       {DAYS.map(day => (
                         <span
                           key={day}
@@ -99,15 +104,17 @@ export default function SlotsPage() {
                         </span>
                       ))}
                     </div>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {slot.days.length} {t('days')}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(slot.id)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slot.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 sm:ms-auto ps-11 sm:ps-0">
+                      <span className="text-xs text-muted-foreground hidden sm:inline">
+                        {slot.days.length} {t('days')}
+                      </span>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(slot.id)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slot.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );
