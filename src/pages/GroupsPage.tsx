@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, GraduationCap, Trash2, Pencil } from 'lucide-react';
+import { Plus, GraduationCap, Trash2, Pencil, Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -33,6 +33,17 @@ export default function GroupsPage() {
       return { subject_id: s.id, hours_per_week: existing?.hours_per_week || 0 };
     }));
     setDialogOpen(true);
+  };
+  const openCopy = (id: string) => {
+    const g = studentGroups.find(x => x.id === id);
+    if (!g) return;
+    setEditId(null); setGrade(g.grade); setSection(g.section); setClassName(g.class_name);
+    setSubjectHours(subjects.map(s => {
+      const existing = g.subjects.find(gs => gs.subject_id === s.id);
+      return { subject_id: s.id, hours_per_week: existing?.hours_per_week || 0 };
+    }));
+    setDialogOpen(true);
+    toast.info(t('groupCopied'));
   };
 
   const handleSave = () => {
@@ -95,6 +106,7 @@ export default function GroupsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => openCopy(g.id)}><Copy className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(g.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => { deleteStudentGroup(g.id); toast.success(t('groupDeleted')); }}>
                       <Trash2 className="w-4 h-4" />
