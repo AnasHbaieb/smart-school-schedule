@@ -141,6 +141,8 @@ const translations = {
   update: { en: 'Update', ar: 'تحديث' },
   delete: { en: 'Delete', ar: 'حذف' },
   edit: { en: 'Edit', ar: 'تعديل' },
+  copy: { en: 'Copy', ar: 'نسخ' },
+  groupCopied: { en: 'Group copied — modify and save', ar: 'تم نسخ القسم — عدّل واحفظ' },
 
   // Days
   monday: { en: 'Monday', ar: 'الإثنين' },
