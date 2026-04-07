@@ -10,26 +10,29 @@ interface SchedulerInput {
 }
 
 /**
- * Build a set of time_slot_ids that are blocked due to lunch break rules.
- * Rules:
- * - Lunch break slots themselves are blocked (no study).
- * - The 1 slot immediately before and 1 slot immediately after lunch are blocked.
+ * Get lunch-adjacent slot info for dynamic scheduling.
+ * Rule: at least one of the slots immediately before/after lunch must be free (rest).
+ * You CAN study in one adjacent slot, but NOT both.
  */
-function getBlockedSlotIds(timeSlotDefs: TimeSlotDef[]): Set<string> {
-  const blocked = new Set<string>();
+function getLunchAdjacentInfo(timeSlotDefs: TimeSlotDef[]): {
+  lunchIds: Set<string>;
+  adjacentPairs: Array<{ before: string | null; after: string | null }>;
+} {
+  const lunchIds = new Set<string>();
+  const adjacentPairs: Array<{ before: string | null; after: string | null }> = [];
   const sorted = [...timeSlotDefs].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
   for (let i = 0; i < sorted.length; i++) {
     if (sorted[i].is_lunch_break) {
-      blocked.add(sorted[i].id);
-      // Block 1 slot before
-      if (i - 1 >= 0) blocked.add(sorted[i - 1].id);
-      // Block 1 slot after
-      if (i + 1 < sorted.length) blocked.add(sorted[i + 1].id);
+      lunchIds.add(sorted[i].id);
+      adjacentPairs.push({
+        before: i - 1 >= 0 ? sorted[i - 1].id : null,
+        after: i + 1 < sorted.length ? sorted[i + 1].id : null,
+      });
     }
   }
 
-  return blocked;
+  return { lunchIds, adjacentPairs };
 }
 
 export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
@@ -38,8 +41,10 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const teacherHoursUsed = new Map<string, number>();
   let entryId = 1;
 
-  // Compute blocked slots from lunch break rules
-  const blockedSlotIds = timeSlotDefs ? getBlockedSlotIds(timeSlotDefs) : new Set<string>();
+  // Compute lunch break info for dynamic adjacency check
+  const { lunchIds, adjacentPairs } = timeSlotDefs
+    ? getLunchAdjacentInfo(timeSlotDefs)
+    : { lunchIds: new Set<string>(), adjacentPairs: [] };
 
   const sortedSlots = [...lessonSlots].sort((a, b) => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -55,8 +60,28 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     }
 
     for (const slot of sortedSlots) {
-      // Skip blocked slots (lunch break + adjacent rest slots)
-      if (blockedSlotIds.has(slot.time_slot_id)) continue;
+      // Skip lunch break slots
+      if (lunchIds.has(slot.time_slot_id)) continue;
+
+      // Check lunch adjacency rule: can't study BOTH before and after lunch
+      let blockedByLunch = false;
+      for (const pair of adjacentPairs) {
+        const isBeforeSlot = pair.before === slot.time_slot_id;
+        const isAfterSlot = pair.after === slot.time_slot_id;
+        if (isBeforeSlot) {
+          // This slot is before lunch; check if after-lunch slot already has a lesson for this group
+          if (pair.after && entries.some(e => e.time_slot_id === pair.after && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
+            blockedByLunch = true;
+          }
+        }
+        if (isAfterSlot) {
+          // This slot is after lunch; check if before-lunch slot already has a lesson for this group
+          if (pair.before && entries.some(e => e.time_slot_id === pair.before && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
+            blockedByLunch = true;
+          }
+        }
+      }
+      if (blockedByLunch) continue;
 
       const groupOccupied = entries.some(
         e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.student_group_id === group.id
