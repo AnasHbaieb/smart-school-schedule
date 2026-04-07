@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 export default function TimetablePage() {
   const data = useData();
-  const { studentGroups, teachers, subjects, classrooms, lessonSlots, timetableEntries, setEntries } = data;
+  const { studentGroups, teachers, subjects, classrooms, lessonSlots, timetableEntries, setEntries, timeSlotDefs } = data;
   const { t } = useLang();
   const [groupFilter, setGroupFilter] = useState<string>('all');
   const [teacherFilter, setTeacherFilter] = useState<string>('all');
@@ -22,6 +22,7 @@ export default function TimetablePage() {
       subjects,
       studentGroups,
       lessonSlots,
+      timeSlotDefs,
     });
     setEntries(entries);
     toast.success(`${t('autoScheduled')} ${entries.length} ${t('lessons')}`);
@@ -76,6 +77,7 @@ export default function TimetablePage() {
       <WeeklyGrid
         entries={timetableEntries}
         lessonSlots={lessonSlots}
+        timeSlotDefs={timeSlotDefs}
         filterGroupId={groupFilter === 'all' ? undefined : groupFilter}
         filterTeacherId={teacherFilter === 'all' ? undefined : teacherFilter}
         getSubjectById={data.getSubjectById}

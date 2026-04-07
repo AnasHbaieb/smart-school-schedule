@@ -44,7 +44,7 @@ export function useAppData() {
       if (teachRes.data) setTeachers(teachRes.data.map((t: any) => ({ id: t.id, name: t.name, subject_id: t.subject_id, hours_per_week: t.hours_per_week, sections: t.sections || [] })));
       if (classRes.data) setClassrooms(classRes.data.map((c: any) => ({ id: c.id, name: c.name, is_general: c.is_general, subject_ids: c.subject_ids || [] })));
       if (groupRes.data) setStudentGroups(groupRes.data.map((g: any) => ({ id: g.id, grade: g.grade, section: g.section, class_name: g.class_name || '', subjects: g.subjects || [] })));
-      if (slotRes.data) setTimeSlotDefs(slotRes.data.map((s: any) => ({ id: s.id, start_time: s.start_time, end_time: s.end_time, days: (s.days || DAYS) as DayOfWeek[] })));
+      if (slotRes.data) setTimeSlotDefs(slotRes.data.map((s: any) => ({ id: s.id, start_time: s.start_time, end_time: s.end_time, days: (s.days || DAYS) as DayOfWeek[], is_lunch_break: s.is_lunch_break || false })));
       if (entryRes.data) setTimetableEntries(entryRes.data.map((e: any) => ({ id: e.id, time_slot_id: e.time_slot_id, day_of_week: e.day_of_week, teacher_id: e.teacher_id, classroom_id: e.classroom_id, subject_id: e.subject_id, student_group_id: e.student_group_id })));
       setLoading(false);
     }
@@ -137,15 +137,16 @@ export function useAppData() {
 
   // Time Slot Defs
   const addTimeSlot = useCallback(async (ts: Omit<TimeSlotDef, 'id'>) => {
-    const { data, error } = await supabase.from('time_slots').insert({ start_time: ts.start_time, end_time: ts.end_time, days: ts.days }).select().single();
+    const { data, error } = await supabase.from('time_slots').insert({ start_time: ts.start_time, end_time: ts.end_time, days: ts.days, is_lunch_break: ts.is_lunch_break }).select().single();
     if (error) { console.error(error); return; }
-    setTimeSlotDefs(prev => [...prev, { id: data.id, start_time: data.start_time, end_time: data.end_time, days: (data.days || DAYS) as DayOfWeek[] }].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+    setTimeSlotDefs(prev => [...prev, { id: data.id, start_time: data.start_time, end_time: data.end_time, days: (data.days || DAYS) as DayOfWeek[], is_lunch_break: data.is_lunch_break || false }].sort((a, b) => a.start_time.localeCompare(b.start_time)));
   }, []);
   const updateTimeSlot = useCallback(async (id: string, ts: Partial<TimeSlotDef>) => {
     const update: any = {};
     if (ts.start_time !== undefined) update.start_time = ts.start_time;
     if (ts.end_time !== undefined) update.end_time = ts.end_time;
     if (ts.days !== undefined) update.days = ts.days;
+    if (ts.is_lunch_break !== undefined) update.is_lunch_break = ts.is_lunch_break;
     const { error } = await supabase.from('time_slots').update(update).eq('id', id);
     if (error) { console.error(error); return; }
     setTimeSlotDefs(prev => prev.map(x => x.id === id ? { ...x, ...ts } : x).sort((a, b) => a.start_time.localeCompare(b.start_time)));

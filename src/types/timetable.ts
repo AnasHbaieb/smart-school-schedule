@@ -40,6 +40,7 @@ export interface TimeSlotDef {
   start_time: string;
   end_time: string;
   days: DayOfWeek[];
+  is_lunch_break: boolean;
 }
 
 export interface LessonSlot {

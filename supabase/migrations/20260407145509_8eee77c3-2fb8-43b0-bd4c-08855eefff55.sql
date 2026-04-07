@@ -1,0 +1,1 @@
+ALTER TABLE public.time_slots ADD COLUMN is_lunch_break boolean NOT NULL DEFAULT false;

@@ -127,6 +127,7 @@ export type Database = {
           days: string[]
           end_time: string
           id: string
+          is_lunch_break: boolean
           start_time: string
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           days?: string[]
           end_time: string
           id?: string
+          is_lunch_break?: boolean
           start_time: string
         }
         Update: {
@@ -141,6 +143,7 @@ export type Database = {
           days?: string[]
           end_time?: string
           id?: string
+          is_lunch_break?: boolean
           start_time?: string
         }
         Relationships: []
