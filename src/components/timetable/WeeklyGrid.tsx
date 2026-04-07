@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DAYS, DayOfWeek, TimetableEntry, LessonSlot, Subject, Teacher, Classroom } from '@/types/timetable';
+import { DAYS, DayOfWeek, TimetableEntry, LessonSlot, Subject, Teacher, Classroom, TimeSlotDef } from '@/types/timetable';
 import { useLang } from '@/contexts/LanguageContext';
 import { TranslationKey } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ const DAY_SHORT_KEY_MAP: Record<DayOfWeek, TranslationKey> = {
 interface WeeklyGridProps {
   entries: TimetableEntry[];
   lessonSlots: LessonSlot[];
+  timeSlotDefs?: TimeSlotDef[];
   filterGroupId?: string;
   filterTeacherId?: string;
   getSubjectById: (id: string) => Subject | undefined;
@@ -24,7 +25,7 @@ interface WeeklyGridProps {
 }
 
 export function WeeklyGrid({
-  entries, lessonSlots, filterGroupId, filterTeacherId,
+  entries, lessonSlots, timeSlotDefs, filterGroupId, filterTeacherId,
   getSubjectById, getTeacherById, getClassroomById,
 }: WeeklyGridProps) {
   const { t } = useLang();
