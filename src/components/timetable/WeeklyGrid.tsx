@@ -32,11 +32,21 @@ export function WeeklyGrid({
   const safeSlots = lessonSlots || [];
   const safeEntries = entries || [];
 
+  const lunchSlotIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (timeSlotDefs) {
+      for (const td of timeSlotDefs) {
+        if (td.is_lunch_break) ids.add(td.id);
+      }
+    }
+    return ids;
+  }, [timeSlotDefs]);
+
   const timeSlots = useMemo(() => {
-    const seen = new Map<string, { start: string; end: string }>();
+    const seen = new Map<string, { start: string; end: string; timeSlotId: string }>();
     for (const ls of safeSlots) {
       const key = `${ls.start_time}-${ls.end_time}`;
-      if (!seen.has(key)) seen.set(key, { start: ls.start_time, end: ls.end_time });
+      if (!seen.has(key)) seen.set(key, { start: ls.start_time, end: ls.end_time, timeSlotId: ls.time_slot_id });
     }
     return Array.from(seen.values()).sort((a, b) => a.start.localeCompare(b.start));
   }, [safeSlots]);
@@ -81,41 +91,61 @@ export function WeeklyGrid({
           ))}
         </div>
 
-        {timeSlots.map(ts => (
-          <div key={`${ts.start}-${ts.end}`} className="gap-1 mb-1" style={{ display: 'grid', gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
-            <div className="flex flex-col justify-center px-3 py-2 text-xs font-medium text-muted-foreground">
-              <span>{ts.start}</span>
-              <span className="text-[10px] opacity-60">{ts.end}</span>
-            </div>
-            {activeDays.map(day => {
-              const key = `${day}-${ts.start}-${ts.end}`;
-              const cellEntries = entryMap.get(key) || [];
-              if (cellEntries.length === 0) {
+        {timeSlots.map(ts => {
+          const isLunch = lunchSlotIds.has(ts.timeSlotId);
+
+          if (isLunch) {
+            return (
+              <div key={`${ts.start}-${ts.end}`} className="gap-1 mb-1" style={{ display: 'grid', gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
+                <div className="flex flex-col justify-center px-3 py-2 text-xs font-medium text-accent">
+                  <span>{ts.start}</span>
+                  <span className="text-[10px] opacity-60">{ts.end}</span>
+                </div>
+                {activeDays.map(day => (
+                  <div key={`${day}-${ts.start}-${ts.end}`} className="bg-accent/10 rounded-lg border border-accent/30 min-h-[60px] flex items-center justify-center">
+                    <span className="text-xs font-medium text-accent">🍽 {t('lunchBreak')}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div key={`${ts.start}-${ts.end}`} className="gap-1 mb-1" style={{ display: 'grid', gridTemplateColumns: `100px repeat(${activeDays.length}, 1fr)` }}>
+              <div className="flex flex-col justify-center px-3 py-2 text-xs font-medium text-muted-foreground">
+                <span>{ts.start}</span>
+                <span className="text-[10px] opacity-60">{ts.end}</span>
+              </div>
+              {activeDays.map(day => {
+                const key = `${day}-${ts.start}-${ts.end}`;
+                const cellEntries = entryMap.get(key) || [];
+                if (cellEntries.length === 0) {
+                  return (
+                    <div key={key} className="bg-card/50 rounded-lg border border-border/50 min-h-[60px] flex items-center justify-center hover:bg-muted/50 transition-colors cursor-pointer">
+                      <span className="text-xs text-muted-foreground/30">—</span>
+                    </div>
+                  );
+                }
+                const entry = cellEntries[0];
+                const subject = getSubjectById(entry.subject_id);
+                const teacher = getTeacherById(entry.teacher_id);
+                const classroom = getClassroomById(entry.classroom_id);
                 return (
-                  <div key={key} className="bg-card/50 rounded-lg border border-border/50 min-h-[60px] flex items-center justify-center hover:bg-muted/50 transition-colors cursor-pointer">
-                    <span className="text-xs text-muted-foreground/30">—</span>
+                  <div key={key} className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative" style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}>
+                    <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
+                    <div className="text-[10px] opacity-80 space-y-0.5">
+                      <div className="truncate">{teacher?.name}</div>
+                      <div className="truncate">{classroom?.name}</div>
+                    </div>
+                    {cellEntries.length > 1 && (
+                      <span className="absolute top-1 right-1 bg-white/30 text-[9px] px-1 rounded">+{cellEntries.length - 1}</span>
+                    )}
                   </div>
                 );
-              }
-              const entry = cellEntries[0];
-              const subject = getSubjectById(entry.subject_id);
-              const teacher = getTeacherById(entry.teacher_id);
-              const classroom = getClassroomById(entry.classroom_id);
-              return (
-                <div key={key} className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative" style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}>
-                  <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
-                  <div className="text-[10px] opacity-80 space-y-0.5">
-                    <div className="truncate">{teacher?.name}</div>
-                    <div className="truncate">{classroom?.name}</div>
-                  </div>
-                  {cellEntries.length > 1 && (
-                    <span className="absolute top-1 right-1 bg-white/30 text-[9px] px-1 rounded">+{cellEntries.length - 1}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

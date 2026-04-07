@@ -77,6 +77,7 @@ export default function TimetablePage() {
       <WeeklyGrid
         entries={timetableEntries}
         lessonSlots={lessonSlots}
+        timeSlotDefs={timeSlotDefs}
         filterGroupId={groupFilter === 'all' ? undefined : groupFilter}
         filterTeacherId={teacherFilter === 'all' ? undefined : teacherFilter}
         getSubjectById={data.getSubjectById}
