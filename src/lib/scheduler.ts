@@ -1,4 +1,4 @@
-import { TimetableEntry, LessonSlot, Teacher, Classroom, StudentGroup, Subject } from '@/types/timetable';
+import { TimetableEntry, LessonSlot, Teacher, Classroom, StudentGroup, Subject, TimeSlotDef } from '@/types/timetable';
 
 interface SchedulerInput {
   teachers: Teacher[];
@@ -6,13 +6,43 @@ interface SchedulerInput {
   subjects: Subject[];
   studentGroups: StudentGroup[];
   lessonSlots: LessonSlot[];
+  timeSlotDefs?: TimeSlotDef[];
+}
+
+/**
+ * Build a set of time_slot_ids that are blocked due to lunch break rules.
+ * Rules:
+ * - Lunch break slots themselves are blocked (no study).
+ * - The 2 slots immediately before and 2 slots immediately after lunch are blocked.
+ * - This ensures at least one rest slot between lunch and any study session.
+ */
+function getBlockedSlotIds(timeSlotDefs: TimeSlotDef[]): Set<string> {
+  const blocked = new Set<string>();
+  const sorted = [...timeSlotDefs].sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].is_lunch_break) {
+      blocked.add(sorted[i].id);
+      // Block 2 slots before
+      if (i - 1 >= 0) blocked.add(sorted[i - 1].id);
+      if (i - 2 >= 0) blocked.add(sorted[i - 2].id);
+      // Block 2 slots after
+      if (i + 1 < sorted.length) blocked.add(sorted[i + 1].id);
+      if (i + 2 < sorted.length) blocked.add(sorted[i + 2].id);
+    }
+  }
+
+  return blocked;
 }
 
 export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
-  const { teachers, classrooms, subjects, studentGroups, lessonSlots } = input;
+  const { teachers, classrooms, subjects, studentGroups, lessonSlots, timeSlotDefs } = input;
   const entries: TimetableEntry[] = [];
   const teacherHoursUsed = new Map<string, number>();
   let entryId = 1;
+
+  // Compute blocked slots from lunch break rules
+  const blockedSlotIds = timeSlotDefs ? getBlockedSlotIds(timeSlotDefs) : new Set<string>();
 
   const sortedSlots = [...lessonSlots].sort((a, b) => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -28,6 +58,9 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     }
 
     for (const slot of sortedSlots) {
+      // Skip blocked slots (lunch break + adjacent rest slots)
+      if (blockedSlotIds.has(slot.time_slot_id)) continue;
+
       const groupOccupied = entries.some(
         e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.student_group_id === group.id
       );
@@ -85,7 +118,6 @@ export function getScheduleStats(
 ) {
   const conflicts: string[] = [];
 
-  // Check for double-booking by time_slot_id + day_of_week
   const slotKeys = new Set(entries.map(e => `${e.time_slot_id}_${e.day_of_week}`));
   for (const key of slotKeys) {
     const slotEntries = entries.filter(e => `${e.time_slot_id}_${e.day_of_week}` === key);

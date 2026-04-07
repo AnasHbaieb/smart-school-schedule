@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Clock, Pencil, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Clock, Pencil, Trash2, UtensilsCrossed } from 'lucide-react';
 import { DAYS, DayOfWeek } from '@/types/timetable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -29,13 +30,14 @@ export default function SlotsPage() {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([...DAYS]);
+  const [isLunchBreak, setIsLunchBreak] = useState(false);
 
-  const openAdd = () => { setEditId(null); setStart(''); setEnd(''); setSelectedDays([...DAYS]); setDialogOpen(true); };
+  const openAdd = () => { setEditId(null); setStart(''); setEnd(''); setSelectedDays([...DAYS]); setIsLunchBreak(false); setDialogOpen(true); };
 
   const openEdit = (id: string) => {
     const slot = timeSlotDefs.find(t => t.id === id);
     if (!slot) return;
-    setEditId(id); setStart(slot.start_time); setEnd(slot.end_time); setSelectedDays([...slot.days]);
+    setEditId(id); setStart(slot.start_time); setEnd(slot.end_time); setSelectedDays([...slot.days]); setIsLunchBreak(slot.is_lunch_break);
     setDialogOpen(true);
   };
 
@@ -43,8 +45,8 @@ export default function SlotsPage() {
     if (!start || !end) { toast.error(t('fillBothTimes')); return; }
     if (start >= end) { toast.error(t('startBeforeEnd')); return; }
     if (selectedDays.length === 0) { toast.error(t('selectAtLeastOneDay')); return; }
-    if (editId) { updateTimeSlot(editId, { start_time: start, end_time: end, days: selectedDays }); toast.success(t('slotUpdated')); }
-    else { addTimeSlot({ start_time: start, end_time: end, days: selectedDays }); toast.success(t('slotAdded')); }
+    if (editId) { updateTimeSlot(editId, { start_time: start, end_time: end, days: selectedDays, is_lunch_break: isLunchBreak }); toast.success(t('slotUpdated')); }
+    else { addTimeSlot({ start_time: start, end_time: end, days: selectedDays, is_lunch_break: isLunchBreak }); toast.success(t('slotAdded')); }
     setDialogOpen(false);
   };
 
@@ -69,56 +71,55 @@ export default function SlotsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {timeSlotDefs.map((slot, i) => {
-              const isLunchBefore = i > 0 && timeSlotDefs[i - 1].end_time <= '13:05' && slot.start_time >= '14:00';
-              return (
-                <div key={slot.id}>
-                  {isLunchBefore && (
-                    <div className="flex items-center gap-3 py-2 text-sm text-accent font-medium">
-                      <div className="h-px flex-1 bg-accent/30" />
-                      {t('lunchBreak')}
-                      <div className="h-px flex-1 bg-accent/30" />
-                    </div>
-                  )}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-primary w-8">P{i + 1}</span>
-                      <span className="text-sm font-medium">{slot.start_time}</span>
-                      <span className="text-xs text-muted-foreground">→</span>
-                      <span className="text-sm font-medium">{slot.end_time}</span>
-                      <span className="text-xs text-muted-foreground sm:hidden">
-                        ({slot.days.length} {t('days')})
+            {timeSlotDefs.map((slot, i) => (
+              <div key={slot.id}>
+                <div className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg transition-colors ${
+                  slot.is_lunch_break
+                    ? 'bg-accent/20 border border-accent/40'
+                    : 'bg-muted/50 hover:bg-muted'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-primary w-8">
+                      {slot.is_lunch_break ? <UtensilsCrossed className="w-4 h-4 text-accent" /> : `P${i + 1 - timeSlotDefs.slice(0, i).filter(s => s.is_lunch_break).length}`}
+                    </span>
+                    <span className="text-sm font-medium">{slot.start_time}</span>
+                    <span className="text-xs text-muted-foreground">→</span>
+                    <span className="text-sm font-medium">{slot.end_time}</span>
+                    {slot.is_lunch_break && (
+                      <span className="text-xs font-medium text-accent">{t('lunchBreak')}</span>
+                    )}
+                    <span className="text-xs text-muted-foreground sm:hidden">
+                      ({slot.days.length} {t('days')})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap ps-11 sm:ps-0">
+                    {DAYS.map(day => (
+                      <span
+                        key={day}
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          slot.days.includes(day)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {t(DAY_SHORT_KEY_MAP[day])}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-1 flex-wrap ps-11 sm:ps-0">
-                      {DAYS.map(day => (
-                        <span
-                          key={day}
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                            slot.days.includes(day)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {t(DAY_SHORT_KEY_MAP[day])}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1 sm:ms-auto ps-11 sm:ps-0">
-                      <span className="text-xs text-muted-foreground hidden sm:inline">
-                        {slot.days.length} {t('days')}
-                      </span>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(slot.id)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slot.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1 sm:ms-auto ps-11 sm:ps-0">
+                    <span className="text-xs text-muted-foreground hidden sm:inline">
+                      {slot.days.length} {t('days')}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(slot.id)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slot.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
             {timeSlotDefs.length === 0 && (
               <p className="text-center text-muted-foreground py-8">{t('noSlotsYet')}</p>
             )}
@@ -141,6 +142,13 @@ export default function SlotsPage() {
                 <label className="text-sm font-medium">{t('endTime')}</label>
                 <Input type="time" value={end} onChange={e => setEnd(e.target.value)} />
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <UtensilsCrossed className="w-4 h-4 text-accent" />
+                <label className="text-sm font-medium">{t('lunchBreak')}</label>
+              </div>
+              <Switch checked={isLunchBreak} onCheckedChange={setIsLunchBreak} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('activeDays')}</label>
