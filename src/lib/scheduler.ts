@@ -41,8 +41,10 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const teacherHoursUsed = new Map<string, number>();
   let entryId = 1;
 
-  // Compute blocked slots from lunch break rules
-  const blockedSlotIds = timeSlotDefs ? getBlockedSlotIds(timeSlotDefs) : new Set<string>();
+  // Compute lunch break info for dynamic adjacency check
+  const { lunchIds, adjacentPairs } = timeSlotDefs
+    ? getLunchAdjacentInfo(timeSlotDefs)
+    : { lunchIds: new Set<string>(), adjacentPairs: [] };
 
   const sortedSlots = [...lessonSlots].sort((a, b) => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -58,8 +60,28 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     }
 
     for (const slot of sortedSlots) {
-      // Skip blocked slots (lunch break + adjacent rest slots)
-      if (blockedSlotIds.has(slot.time_slot_id)) continue;
+      // Skip lunch break slots
+      if (lunchIds.has(slot.time_slot_id)) continue;
+
+      // Check lunch adjacency rule: can't study BOTH before and after lunch
+      let blockedByLunch = false;
+      for (const pair of adjacentPairs) {
+        const isBeforeSlot = pair.before === slot.time_slot_id;
+        const isAfterSlot = pair.after === slot.time_slot_id;
+        if (isBeforeSlot) {
+          // This slot is before lunch; check if after-lunch slot already has a lesson for this group
+          if (pair.after && entries.some(e => e.time_slot_id === pair.after && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
+            blockedByLunch = true;
+          }
+        }
+        if (isAfterSlot) {
+          // This slot is after lunch; check if before-lunch slot already has a lesson for this group
+          if (pair.before && entries.some(e => e.time_slot_id === pair.before && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
+            blockedByLunch = true;
+          }
+        }
+      }
+      if (blockedByLunch) continue;
 
       const groupOccupied = entries.some(
         e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.student_group_id === group.id
