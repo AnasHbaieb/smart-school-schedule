@@ -95,10 +95,10 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     if (pair.after) lunchAdjacentIds.add(pair.after);
   }
 
-  // Non-lunch and non-lunch-adjacent slot indices for gap checking
+  // Non-lunch slot indices for gap checking (only lunch itself is excluded, not adjacent slots)
   const nonLunchIndices = sortedTimeSlotDefs
-    .map((ts, i) => ({ i, id: ts.id, isLunch: ts.is_lunch_break }))
-    .filter(x => !x.isLunch && !lunchAdjacentIds.has(x.id))
+    .map((ts, i) => ({ i, isLunch: ts.is_lunch_break }))
+    .filter(x => !x.isLunch)
     .map(x => x.i);
 
   const sortedSlots = [...lessonSlots].sort((a, b) => {
