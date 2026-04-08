@@ -214,6 +214,10 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
 
         remainingHours.set(subjectId, (remainingHours.get(subjectId) || 1) - 1);
         teacherHoursUsed.set(foundTeacher.id, (teacherHoursUsed.get(foundTeacher.id) || 0) + 1);
+        // Lock this teacher for this group+subject
+        if (!groupSubjectTeacher.has(gsKey)) {
+          groupSubjectTeacher.set(gsKey, foundTeacher.id);
+        }
         break;
       }
     }
