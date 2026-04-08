@@ -162,7 +162,18 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
         .sort((a, b) => b[1] - a[1]);
 
       for (const [subjectId] of subjectEntries) {
-        const subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
+        const gsKey = `${group.id}_${subjectId}`;
+        const lockedTeacherId = groupSubjectTeacher.get(gsKey);
+
+        let subjectTeachers: Teacher[];
+        if (lockedTeacherId) {
+          // This group already has a teacher for this subject — use only that teacher
+          const locked = teachers.find(t => t.id === lockedTeacherId);
+          subjectTeachers = locked ? [locked] : [];
+        } else {
+          subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
+        }
+
         let foundTeacher: Teacher | undefined;
         for (const t of subjectTeachers) {
           const hoursUsed = teacherHoursUsed.get(t.id) || 0;
