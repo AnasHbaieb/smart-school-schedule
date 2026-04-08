@@ -72,6 +72,8 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const { teachers, classrooms, subjects, studentGroups, lessonSlots, timeSlotDefs } = input;
   const entries: TimetableEntry[] = [];
   const teacherHoursUsed = new Map<string, number>();
+  // Track which teacher is assigned to each (group, subject) pair
+  const groupSubjectTeacher = new Map<string, string>();
   let entryId = 1;
 
   // Compute lunch break info for dynamic adjacency check
@@ -160,7 +162,18 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
         .sort((a, b) => b[1] - a[1]);
 
       for (const [subjectId] of subjectEntries) {
-        const subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
+        const gsKey = `${group.id}_${subjectId}`;
+        const lockedTeacherId = groupSubjectTeacher.get(gsKey);
+
+        let subjectTeachers: Teacher[];
+        if (lockedTeacherId) {
+          // This group already has a teacher for this subject — use only that teacher
+          const locked = teachers.find(t => t.id === lockedTeacherId);
+          subjectTeachers = locked ? [locked] : [];
+        } else {
+          subjectTeachers = teachers.filter(t => t.subject_id === subjectId);
+        }
+
         let foundTeacher: Teacher | undefined;
         for (const t of subjectTeachers) {
           const hoursUsed = teacherHoursUsed.get(t.id) || 0;
@@ -201,6 +214,10 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
 
         remainingHours.set(subjectId, (remainingHours.get(subjectId) || 1) - 1);
         teacherHoursUsed.set(foundTeacher.id, (teacherHoursUsed.get(foundTeacher.id) || 0) + 1);
+        // Lock this teacher for this group+subject
+        if (!groupSubjectTeacher.has(gsKey)) {
+          groupSubjectTeacher.set(gsKey, foundTeacher.id);
+        }
         break;
       }
     }
