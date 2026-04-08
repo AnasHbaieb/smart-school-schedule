@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { DAYS, DayOfWeek, TimetableEntry, LessonSlot, Subject, Teacher, Classroom, TimeSlotDef } from '@/types/timetable';
 import { useLang } from '@/contexts/LanguageContext';
+import { UNASSIGNED_TEACHER_ID } from '@/lib/scheduler';
 import { TranslationKey } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
 
@@ -130,11 +131,14 @@ export function WeeklyGrid({
                 const subject = getSubjectById(entry.subject_id);
                 const teacher = getTeacherById(entry.teacher_id);
                 const classroom = getClassroomById(entry.classroom_id);
+                const isUnassigned = entry.teacher_id === UNASSIGNED_TEACHER_ID;
                 return (
-                  <div key={key} className="rounded-lg min-h-[60px] p-2 flex flex-col justify-between text-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative" style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}>
+                  <div key={key} className={cn("rounded-lg min-h-[60px] p-2 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform shadow-sm relative", isUnassigned ? "text-white ring-2 ring-destructive/60" : "text-white")} style={{ backgroundColor: subject?.color || 'hsl(var(--muted))' }}>
                     <span className="text-xs font-semibold leading-tight truncate">{subject?.title}</span>
                     <div className="text-[10px] opacity-80 space-y-0.5">
-                      <div className="truncate">{teacher?.name}</div>
+                      <div className={cn("truncate", isUnassigned && "text-yellow-200 font-semibold italic")}>
+                        {isUnassigned ? `⚠ ${t('unassignedTeacher')}` : teacher?.name}
+                      </div>
                       <div className="truncate">{classroom?.name}</div>
                     </div>
                     {cellEntries.length > 1 && (

@@ -68,6 +68,8 @@ function wouldCreateGap(
   return false;
 }
 
+export const UNASSIGNED_TEACHER_ID = '__unassigned_teacher__';
+
 export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const { teachers, classrooms, subjects, studentGroups, lessonSlots, timeSlotDefs } = input;
   const entries: TimetableEntry[] = [];
@@ -196,7 +198,8 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
           foundTeacher = t;
           break;
         }
-        if (!foundTeacher) continue;
+        const useUnassigned = !foundTeacher;
+        const teacherId = foundTeacher ? foundTeacher.id : UNASSIGNED_TEACHER_ID;
 
         // Find classroom
         const specialized = classrooms.filter(c => !c.is_general && c.subject_ids.includes(subjectId));
@@ -212,17 +215,19 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
           id: `auto_${entryId++}`,
           time_slot_id: slot.time_slot_id,
           day_of_week: slot.day_of_week,
-          teacher_id: foundTeacher.id,
+          teacher_id: teacherId,
           classroom_id: foundClassroom.id,
           subject_id: subjectId,
           student_group_id: group.id,
         });
 
         remainingHours.set(subjectId, (remainingHours.get(subjectId) || 1) - 1);
-        teacherHoursUsed.set(foundTeacher.id, (teacherHoursUsed.get(foundTeacher.id) || 0) + 1);
-        // Lock this teacher for this group+subject
-        if (!groupSubjectTeacher.has(gsKey)) {
-          groupSubjectTeacher.set(gsKey, foundTeacher.id);
+        if (!useUnassigned) {
+          teacherHoursUsed.set(foundTeacher!.id, (teacherHoursUsed.get(foundTeacher!.id) || 0) + 1);
+        }
+        // Lock this teacher for this group+subject (only real teachers)
+        if (!useUnassigned && !groupSubjectTeacher.has(gsKey)) {
+          groupSubjectTeacher.set(gsKey, foundTeacher!.id);
         }
         break;
       }
