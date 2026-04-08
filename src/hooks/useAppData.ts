@@ -45,7 +45,15 @@ export function useAppData() {
       if (classRes.data) setClassrooms(classRes.data.map((c: any) => ({ id: c.id, name: c.name, is_general: c.is_general, subject_ids: c.subject_ids || [] })));
       if (groupRes.data) setStudentGroups(groupRes.data.map((g: any) => ({ id: g.id, grade: g.grade, section: g.section, class_name: g.class_name || '', subjects: g.subjects || [] })));
       if (slotRes.data) setTimeSlotDefs(slotRes.data.map((s: any) => ({ id: s.id, start_time: s.start_time, end_time: s.end_time, days: (s.days || DAYS) as DayOfWeek[], is_lunch_break: s.is_lunch_break || false })));
-      if (entryRes.data) setTimetableEntries(entryRes.data.map((e: any) => ({ id: e.id, time_slot_id: e.time_slot_id, day_of_week: e.day_of_week, teacher_id: e.teacher_id, classroom_id: e.classroom_id, subject_id: e.subject_id, student_group_id: e.student_group_id })));
+      if (entryRes.data) setTimetableEntries(entryRes.data.map((e: any) => ({
+        id: e.id,
+        time_slot_id: e.time_slot_id,
+        day_of_week: e.day_of_week,
+        teacher_id: e.teacher_id,
+        classroom_id: e.classroom_id,
+        subject_id: e.subject_id,
+        student_group_id: e.student_group_id
+      })));
       setLoading(false);
     }
     fetchAll();
@@ -165,7 +173,15 @@ export function useAppData() {
       subject_id: e.subject_id, student_group_id: e.student_group_id
     }).select().single();
     if (error) { console.error(error); return; }
-    setTimetableEntries(prev => [...prev, { id: data.id, time_slot_id: data.time_slot_id, day_of_week: data.day_of_week as DayOfWeek, teacher_id: data.teacher_id, classroom_id: data.classroom_id, subject_id: data.subject_id, student_group_id: data.student_group_id }]);
+    setTimetableEntries(prev => [...prev, {
+      id: data.id,
+      time_slot_id: data.time_slot_id,
+      day_of_week: data.day_of_week as DayOfWeek,
+      teacher_id: data.teacher_id,
+      classroom_id: data.classroom_id,
+      subject_id: data.subject_id,
+      student_group_id: data.student_group_id
+    }]);
   }, []);
   const deleteEntry = useCallback(async (id: string) => {
     const { error } = await supabase.from('timetable_entries').delete().eq('id', id);
@@ -174,16 +190,34 @@ export function useAppData() {
   }, []);
   const setEntries = useCallback(async (entries: TimetableEntry[]) => {
     // Clear existing and insert new
-    await supabase.from('timetable_entries').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    const { error: deleteError } = await supabase
+      .from('timetable_entries')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    if (deleteError) {
+      throw new Error(`Failed to clear timetable entries: ${deleteError.message}`);
+    }
+
     if (entries.length > 0) {
       const inserts = entries.map(e => ({
         time_slot_id: e.time_slot_id, day_of_week: e.day_of_week,
         teacher_id: e.teacher_id, classroom_id: e.classroom_id,
         subject_id: e.subject_id, student_group_id: e.student_group_id
       }));
-      const { data } = await supabase.from('timetable_entries').insert(inserts).select();
+      const { data, error: insertError } = await supabase.from('timetable_entries').insert(inserts).select();
+      if (insertError) {
+        throw new Error(`Failed to save timetable entries: ${insertError.message}`);
+      }
       if (data) {
-        setTimetableEntries(data.map((e: any) => ({ id: e.id, time_slot_id: e.time_slot_id, day_of_week: e.day_of_week, teacher_id: e.teacher_id, classroom_id: e.classroom_id, subject_id: e.subject_id, student_group_id: e.student_group_id })));
+        setTimetableEntries(data.map((e: any) => ({
+          id: e.id,
+          time_slot_id: e.time_slot_id,
+          day_of_week: e.day_of_week,
+          teacher_id: e.teacher_id,
+          classroom_id: e.classroom_id,
+          subject_id: e.subject_id,
+          student_group_id: e.student_group_id
+        })));
         return;
       }
     }

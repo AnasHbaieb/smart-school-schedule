@@ -15,21 +15,26 @@ export default function TimetablePage() {
   const [groupFilter, setGroupFilter] = useState<string>('all');
   const [teacherFilter, setTeacherFilter] = useState<string>('all');
 
-  const handleAutoSchedule = () => {
-    const entries = autoSchedule({
-      teachers,
-      classrooms,
-      subjects,
-      studentGroups,
-      lessonSlots,
-      timeSlotDefs,
-    });
-    setEntries(entries);
-    toast.success(`${t('autoScheduled')} ${entries.length} ${t('lessons')}`);
+  const handleAutoSchedule = async () => {
+    try {
+      const entries = autoSchedule({
+        teachers,
+        classrooms,
+        subjects,
+        studentGroups,
+        lessonSlots,
+        timeSlotDefs,
+      });
+      await setEntries(entries);
+      toast.success(`${t('autoScheduled')} ${entries.length} ${t('lessons')}`);
+    } catch (error) {
+      console.error('Auto schedule failed:', error);
+      toast.error('Auto schedule failed. Check data constraints and try again.');
+    }
   };
 
-  const handleClear = () => {
-    setEntries([]);
+  const handleClear = async () => {
+    await setEntries([]);
     toast.success(t('timetableCleared'));
   };
 
