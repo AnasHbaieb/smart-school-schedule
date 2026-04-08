@@ -162,6 +162,12 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
         .sort((a, b) => b[1] - a[1]);
 
       for (const [subjectId] of subjectEntries) {
+        // Max 2 hours per subject per day per group
+        const subjectHoursToday = entries.filter(
+          e => e.student_group_id === group.id && e.subject_id === subjectId && e.day_of_week === slot.day_of_week
+        ).length;
+        if (subjectHoursToday >= 2) continue;
+
         const gsKey = `${group.id}_${subjectId}`;
         const lockedTeacherId = groupSubjectTeacher.get(gsKey);
 
