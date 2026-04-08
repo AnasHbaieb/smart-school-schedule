@@ -72,6 +72,8 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const { teachers, classrooms, subjects, studentGroups, lessonSlots, timeSlotDefs } = input;
   const entries: TimetableEntry[] = [];
   const teacherHoursUsed = new Map<string, number>();
+  // Track which teacher is assigned to each (group, subject) pair
+  const groupSubjectTeacher = new Map<string, string>();
   let entryId = 1;
 
   // Compute lunch break info for dynamic adjacency check
