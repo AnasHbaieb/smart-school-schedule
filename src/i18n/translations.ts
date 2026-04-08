@@ -164,6 +164,7 @@ const translations = {
   timetableCleared: { en: 'Timetable cleared', ar: 'تم مسح الجدول' },
   autoScheduled: { en: 'Auto-scheduled', ar: 'تمت الجدولة التلقائية' },
   lessons: { en: 'lessons', ar: 'حصص' },
+  unassignedTeacher: { en: 'Unassigned', ar: 'غير معيّن' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
