@@ -86,10 +86,17 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const timeSlotIndexMap = new Map<string, number>();
   sortedTimeSlotDefs.forEach((ts, i) => timeSlotIndexMap.set(ts.id, i));
 
-  // Non-lunch slot indices per day (for gap checking)
+  // Lunch-adjacent slot IDs (rest slots that should not count as gaps)
+  const lunchAdjacentIds = new Set<string>();
+  for (const pair of adjacentPairs) {
+    if (pair.before) lunchAdjacentIds.add(pair.before);
+    if (pair.after) lunchAdjacentIds.add(pair.after);
+  }
+
+  // Non-lunch and non-lunch-adjacent slot indices for gap checking
   const nonLunchIndices = sortedTimeSlotDefs
-    .map((ts, i) => ({ i, isLunch: ts.is_lunch_break }))
-    .filter(x => !x.isLunch)
+    .map((ts, i) => ({ i, id: ts.id, isLunch: ts.is_lunch_break }))
+    .filter(x => !x.isLunch && !lunchAdjacentIds.has(x.id))
     .map(x => x.i);
 
   const sortedSlots = [...lessonSlots].sort((a, b) => {
