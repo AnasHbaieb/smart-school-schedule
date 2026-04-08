@@ -35,6 +35,39 @@ function getLunchAdjacentInfo(timeSlotDefs: TimeSlotDef[]): {
   return { lunchIds, adjacentPairs };
 }
 
+/**
+ * Check if placing a lesson at slotIndex for a given day would create a gap
+ * in the entity's (group or teacher) schedule for that day.
+ * A gap = an empty non-lunch slot between two occupied slots.
+ */
+function wouldCreateGap(
+  occupiedSlotIndices: number[],
+  candidateIndex: number,
+  nonLunchIndices: number[]
+): boolean {
+  const allOccupied = new Set([...occupiedSlotIndices, candidateIndex]);
+  if (allOccupied.size <= 1) return false;
+
+  // Only consider non-lunch slot positions
+  const relevantIndices = nonLunchIndices.filter(i => allOccupied.has(i));
+  if (relevantIndices.length <= 1) return false;
+
+  // Sort them
+  relevantIndices.sort((a, b) => a - b);
+
+  // Check for gaps: any non-lunch slot between min and max that is not occupied
+  for (let k = 0; k < relevantIndices.length - 1; k++) {
+    const from = relevantIndices[k];
+    const to = relevantIndices[k + 1];
+    for (const idx of nonLunchIndices) {
+      if (idx > from && idx < to && !allOccupied.has(idx)) {
+        return true; // gap found
+      }
+    }
+  }
+  return false;
+}
+
 export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
   const { teachers, classrooms, subjects, studentGroups, lessonSlots, timeSlotDefs } = input;
   const entries: TimetableEntry[] = [];
@@ -46,12 +79,33 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
     ? getLunchAdjacentInfo(timeSlotDefs)
     : { lunchIds: new Set<string>(), adjacentPairs: [] };
 
+  // Build sorted time slot order for gap detection
+  const sortedTimeSlotDefs = timeSlotDefs
+    ? [...timeSlotDefs].sort((a, b) => a.start_time.localeCompare(b.start_time))
+    : [];
+  const timeSlotIndexMap = new Map<string, number>();
+  sortedTimeSlotDefs.forEach((ts, i) => timeSlotIndexMap.set(ts.id, i));
+
+  // Non-lunch slot indices per day (for gap checking)
+  const nonLunchIndices = sortedTimeSlotDefs
+    .map((ts, i) => ({ i, isLunch: ts.is_lunch_break }))
+    .filter(x => !x.isLunch)
+    .map(x => x.i);
+
   const sortedSlots = [...lessonSlots].sort((a, b) => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayDiff = dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
     if (dayDiff !== 0) return dayDiff;
     return a.start_time.localeCompare(b.start_time);
   });
+
+  // Helper to get occupied slot indices for an entity on a day
+  function getOccupiedIndices(day: string, entityKey: 'student_group_id' | 'teacher_id', entityId: string): number[] {
+    return entries
+      .filter(e => e.day_of_week === day && e[entityKey] === entityId)
+      .map(e => timeSlotIndexMap.get(e.time_slot_id) ?? -1)
+      .filter(i => i >= 0);
+  }
 
   for (const group of studentGroups) {
     const remainingHours = new Map<string, number>();
@@ -69,13 +123,11 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
         const isBeforeSlot = pair.before === slot.time_slot_id;
         const isAfterSlot = pair.after === slot.time_slot_id;
         if (isBeforeSlot) {
-          // This slot is before lunch; check if after-lunch slot already has a lesson for this group
           if (pair.after && entries.some(e => e.time_slot_id === pair.after && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
             blockedByLunch = true;
           }
         }
         if (isAfterSlot) {
-          // This slot is after lunch; check if before-lunch slot already has a lesson for this group
           if (pair.before && entries.some(e => e.time_slot_id === pair.before && e.day_of_week === slot.day_of_week && e.student_group_id === group.id)) {
             blockedByLunch = true;
           }
@@ -88,6 +140,14 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
       );
       if (groupOccupied) continue;
 
+      const candidateIndex = timeSlotIndexMap.get(slot.time_slot_id) ?? -1;
+
+      // No-gap check for student group
+      if (candidateIndex >= 0) {
+        const groupSlots = getOccupiedIndices(slot.day_of_week, 'student_group_id', group.id);
+        if (wouldCreateGap(groupSlots, candidateIndex, nonLunchIndices)) continue;
+      }
+
       const subjectEntries = Array.from(remainingHours.entries())
         .filter(([, hrs]) => hrs > 0)
         .sort((a, b) => b[1] - a[1]);
@@ -99,7 +159,16 @@ export function autoSchedule(input: SchedulerInput): TimetableEntry[] {
           const hoursUsed = teacherHoursUsed.get(t.id) || 0;
           if (hoursUsed >= t.hours_per_week) continue;
           const occupied = entries.some(e => e.time_slot_id === slot.time_slot_id && e.day_of_week === slot.day_of_week && e.teacher_id === t.id);
-          if (!occupied) { foundTeacher = t; break; }
+          if (occupied) continue;
+
+          // No-gap check for teacher
+          if (candidateIndex >= 0) {
+            const teacherSlots = getOccupiedIndices(slot.day_of_week, 'teacher_id', t.id);
+            if (wouldCreateGap(teacherSlots, candidateIndex, nonLunchIndices)) continue;
+          }
+
+          foundTeacher = t;
+          break;
         }
         if (!foundTeacher) continue;
 
